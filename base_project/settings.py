@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+b)cu!hx7geoi56#@ik=@)f41v#tp7#!%$h0(en^iu&sm7z_f%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 
 # Application definition
@@ -37,7 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'app_academico',
+    'app_evaluaciones',
+    'app_usuarios',
 ]
+
+AUTH_USER_MODEL = 'app_usuarios.Usuario'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -54,7 +60,7 @@ ROOT_URLCONF = 'base_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,9 +108,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ve'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Caracas'
 
 USE_I18N = True
 
@@ -115,3 +121,42 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+# ============================================================
+# ARCHIVOS MEDIA (opcional, para uploads)
+# ============================================================
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# ============================================================
+# CONFIGURACIÓN DE AUTENTICACIÓN
+# ============================================================
+LOGIN_URL = 'usuarios:login'
+LOGIN_REDIRECT_URL = 'usuarios:redirect_por_rol'
+LOGOUT_REDIRECT_URL = 'usuarios:login'
+
+# ============================================================
+# CONFIGURACIÓN PERSONALIZADA DEL PROYECTO
+# ============================================================
+CLAVE_ADMINISTRATIVA_MAESTRA = 'NOTACORE-2026-MASTER'
+
+# ============================================================
+# DEFAULT PRIMARY KEY FIELD TYPE
+# ============================================================
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================
+# MENSAJES (Django Messages Framework)
+# ============================================================
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert-secondary',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
