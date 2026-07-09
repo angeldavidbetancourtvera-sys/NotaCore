@@ -8,21 +8,30 @@ from .forms import LoginForm, UsuarioRegistroForm
 
 
 def login_view(request: HttpRequest) -> HttpResponse:
+    """
+    Vista de login adaptada para usar 'cedula' en lugar de 'username'.
+    """
     form = LoginForm()
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email']
+            cedula = form.cleaned_data['cedula']
             password = form.cleaned_data['password']
-            user = authenticate(request, username=email, password=password)
+            # ✅ CORRECTO: Usar 'cedula' en lugar de 'username'
+            user = authenticate(request, cedula=cedula, password=password)
             if user is not None:
                 login(request, user)
                 return redirect('usuarios:redirect_por_rol')
+            else:
+                form.add_error(None, "Cédula o contraseña incorrectos.")
 
     return render(request, 'registration/login.html', {'form': form})
 
 
 def register_view(request: HttpRequest) -> HttpResponse:
+    """
+    Vista de registro adaptada para usar 'cedula' en lugar de 'username'.
+    """
     form = UsuarioRegistroForm()
     if request.method == 'POST':
         form = UsuarioRegistroForm(request.POST)
@@ -41,7 +50,18 @@ def logout_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def redirect_por_rol(request: HttpRequest) -> HttpResponse:
-    return redirect('usuarios:dashboard')
+    """
+    Redirige al usuario según su rol después del login.
+    """
+    user = request.user
+    if user.rol == 'ADMIN':
+        return redirect('academico:admin_dashboard')
+    elif user.rol == 'PROFESOR':
+        return redirect('evaluaciones:profesor_dashboard')
+    elif user.rol == 'ESTUDIANTE':
+        return redirect('evaluaciones:estudiante_dashboard')
+    else:
+        return redirect('usuarios:dashboard')
 
 
 @login_required

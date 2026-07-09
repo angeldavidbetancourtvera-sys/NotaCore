@@ -24,9 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app_usuarios.apps.AppUsuariosConfig',
-    'app_academico.apps.AppAcademicoConfig',
-    'app_evaluaciones.apps.AppEvaluacionesConfig',
     'app_academico',
     'app_evaluaciones',
     'app_usuarios',
@@ -50,7 +47,6 @@ ROOT_URLCONF = 'base_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
