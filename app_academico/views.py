@@ -43,14 +43,14 @@ class AulaListView(LoginRequiredMixin, ListView): # TODO: Cambiar a AdminRequire
 class AulaCreateView(LoginRequiredMixin, CreateView): # TODO: Cambiar a AdminRequiredMixin
     model = AulaVirtual
     form_class = AulaVirtualForm
-    template_name = 'admin/aula_form.html'
+    template_name = 'admin/aula_list.html'
     success_url = reverse_lazy('academico:aula_list')
 
 
 class AulaUpdateView(LoginRequiredMixin, UpdateView): # TODO: Cambiar a AdminRequiredMixin
     model = AulaVirtual
     form_class = AulaVirtualForm
-    template_name = 'admin/aula_form.html'
+    template_name = 'admin/aula_list.html'
     success_url = reverse_lazy('academico:aula_list')
 
     def get_initial(self):
