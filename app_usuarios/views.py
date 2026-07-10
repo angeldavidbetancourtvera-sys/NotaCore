@@ -11,19 +11,12 @@ def login_view(request: HttpRequest) -> HttpResponse:
     """
     Vista de login adaptada para usar 'cedula' en lugar de 'username'.
     """
-    form = LoginForm()
+    form = LoginForm(request)
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = LoginForm(request, data=request.POST)
         if form.is_valid():
-            cedula = form.cleaned_data['cedula']
-            password = form.cleaned_data['password']
-            # ✅ CORRECTO: Usar 'cedula' en lugar de 'username'
-            user = authenticate(request, cedula=cedula, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('usuarios:redirect_por_rol')
-            else:
-                form.add_error(None, "Cédula o contraseña incorrectos.")
+            login(request, form.get_user())
+            return redirect('usuarios:redirect_por_rol')
 
     return render(request, 'registration/login.html', {'form': form})
 

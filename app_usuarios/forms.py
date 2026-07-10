@@ -7,15 +7,6 @@ class LoginForm(AuthenticationForm):
     """
     Formulario de login adaptado para usar 'cedula' en lugar de 'username'.
     """
-    cedula = forms.CharField(
-        max_length=20,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Ingrese su cédula',
-            'autofocus': True
-        }),
-        label="Cédula"
-    )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
@@ -26,9 +17,12 @@ class LoginForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Eliminar el campo 'username' heredado de AuthenticationForm
-        if 'username' in self.fields:
-            del self.fields['username']
+        self.fields['username'].label = "Cédula"
+        self.fields['username'].widget = forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingrese su cédula',
+            'autofocus': True
+        })
 
 
 class UsuarioRegistroForm(UserCreationForm):
