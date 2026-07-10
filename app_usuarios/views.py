@@ -70,6 +70,6 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-@role_required('profesor')
+@role_required('PROFESOR')
 def profesor_panel(request: HttpRequest) -> HttpResponse:
     return render(request, 'profesor/home.html', {'user': request.user})

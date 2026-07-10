@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.pk %}Editar aula{% else %}Nueva aula{% endif %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="h3 mb-4">{% if form.instance.pk %}Editar aula{% else %}Nueva aula{% endif %}</h1>
+        <form method="post" class="card p-4 shadow-sm">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{% url 'academico:aula_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>
