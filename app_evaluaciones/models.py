@@ -40,7 +40,9 @@ class Actividad(models.Model):
         return f"{self.titulo} - {self.puntuacion} pts"
 
     def clean(self) -> None:
-        if self.puntuacion > self.plan.puntuacion_max:
+        if self.plan_id is None:
+            return
+        if self.puntuacion is not None and self.puntuacion > self.plan.puntuacion_max:
             raise ValidationError(
                 f"La puntuación no puede exceder {self.plan.puntuacion_max}"
             )
