@@ -6,7 +6,31 @@
     <title>Lista de Usuarios - NotaCore</title>
 </head>
 <body>
-    <h1>Panel Académico: Gestión de Usuarios</h1>
-    <p>Esta es la vista de control de usuarios en la ruta <code>/academico/usuarios/</code>.</p>
+    <h1>Gestión de usuarios</h1>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.cedula }}</td>
+                <td>{{ usuario.get_full_name }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.rol }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No hay usuarios registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

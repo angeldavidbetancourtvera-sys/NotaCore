@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz de notas</title>
+</head>
+<body>
+    <h1>Matriz de notas</h1>
+    <p>Aula: {{ aula.año_curso }}° Año</p>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Estudiante</th>
+                {% for actividad in actividades %}
+                <th>{{ actividad.titulo }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in matriz %}
+            <tr>
+                <td>{{ fila.estudiante.usuario.get_full_name }}</td>
+                {% for item in fila.filas %}
+                <td>{{ item.nota|default:'-' }}</td>
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr><td colspan="10">No hay datos para mostrar.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

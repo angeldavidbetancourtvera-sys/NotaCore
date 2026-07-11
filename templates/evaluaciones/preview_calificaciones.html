@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen de calificaciones</title>
+</head>
+<body>
+    <h1>Resumen de calificaciones</h1>
+    {% for item in resumen %}
+    <h2>{{ item.aula.año_curso }}° Año — {{ item.lapso }}</h2>
+    <ul>
+        {% for detalle in item.detalle %}
+        <li>{{ detalle.actividad.titulo }}: {{ detalle.nota_obtenida|default:'Sin nota' }}</li>
+        {% empty %}
+        <li>No hay actividades registradas.</li>
+        {% endfor %}
+    </ul>
+    {% empty %}
+    <p>No hay resumen disponible.</p>
+    {% endfor %}
+</body>
+</html>

@@ -6,8 +6,57 @@
     <title>Dashboard del Profesor - NotaCore</title>
 </head>
 <body>
-    <h1>Panel del Profesor: Gestión de Evaluaciones</h1>
-    <p>Estás viendo el panel de control docente en la ruta <code>/evaluaciones/profesor/dashboard/</code>.</p>
-    <p>¡Los formularios e importaciones de actividades y calificaciones están listos para usarse aquí!</p>
+    <h1>Panel del profesor</h1>
+    <p>Estas son tus aulas, planes y estudiantes asignados.</p>
+    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+
+    <!--<h2>Mis aulas</h2>
+    <ul>
+        {% for aula in aulas %}
+        <li>{{ aula.año_curso }}° Año — {{ aula.profesor.usuario.get_full_name }}</li>
+        {% empty %}
+        <li>No tienes aulas asignadas.</li>
+        {% endfor %}
+    </ul>-->
+
+    <h2>Gestión</h2>
+    <ul>
+        <li><a href="{% url 'evaluaciones:profesor_aulas' %}">Ver aulas</a></li>
+        <li><a href="{% url 'evaluaciones:profesor_estudiantes' %}">Ver estudiantes</a></li>
+        <li><a href="{% url 'evaluaciones:profesor_planes' %}">Ver planes</a></li>
+        <li><a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}">Asignar estudiantes</a></li>
+    </ul>
+
+    <!--<h2>Planes por lapso</h2>
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Lapso</th>
+                <th>Total de planes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in planes_por_lapso %}
+            <tr>
+                <td>{{ item.lapso }}</td>
+                <td>{{ item.total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No hay planes registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Estudiantes matriculados</h2>
+    <ul>
+        {% for matricula in estudiantes_mat %}
+        <li>{{ matricula.estudiante.usuario.get_full_name }} — {{ matricula.aula.año_curso }}° Año</li>
+        {% empty %}
+        <li>No hay estudiantes matriculados.</li>
+        {% endfor %}
+    </ul>-->
 </body>
 </html>
+

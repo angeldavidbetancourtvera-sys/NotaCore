@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del plan - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del plan</h1>
+    <p><strong>Aula:</strong> {{ plan.aula.año_curso }}° Año</p>
+    <p><strong>Lapso:</strong> {{ plan.get_lapso_display }}</p>
+    <p><strong>Objetivo:</strong> {{ plan.objetivo }}</p>
+    <p><strong>Método:</strong> {{ plan.metodo }}</p>
+    <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
+
+    <p><a href="{% url 'evaluaciones:profesor_plan_evaluar' plan.pk %}">Evaluar este plan</a></p>
+
+    <h2>Actividades</h2>
+    <ul>
+        {% for actividad in actividades %}
+        <li>{{ actividad.titulo }} — {{ actividad.puntuacion }} pts</li>
+        {% empty %}
+        <li>No hay actividades registradas.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:profesor_planes' %}">Volver a planes</a></p>
+</body>
+</html>

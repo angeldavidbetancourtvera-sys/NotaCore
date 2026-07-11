@@ -49,7 +49,24 @@ class AulaVirtual(models.Model):
         return f"{self.año_curso}° Año - {self.profesor.usuario.get_full_name()}"
     
     def get_lapsos_display(self) -> str:
-        return ', '.join(self.lapsos) if self.lapsos else 'Sin lapsos'
+        lapsos = self.lapsos
+        if lapsos is None:
+            return 'Sin lapsos'
+        if isinstance(lapsos, str):
+            return lapsos
+        if isinstance(lapsos, (list, tuple, set)):
+            valores = []
+            for item in lapsos:
+                if item is None:
+                    continue
+                if isinstance(item, str):
+                    valores.append(item)
+                else:
+                    valores.append(str(item))
+            return ', '.join(valores) if valores else 'Sin lapsos'
+        if isinstance(lapsos, dict):
+            return ', '.join(str(value) for value in lapsos.values()) if lapsos else 'Sin lapsos'
+        return str(lapsos)
     
     class Meta:
         db_table = 'aulas_virtuales'

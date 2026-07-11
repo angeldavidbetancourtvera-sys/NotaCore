@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle profesor - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del profesor</h1>
+    <p><strong>Nombre:</strong> {{ profesor.usuario.get_full_name }}</p>
+    <p><strong>Cédula:</strong> {{ profesor.usuario.cedula }}</p>
+    <p><strong>Email:</strong> {{ profesor.usuario.email }}</p>
+    <p><strong>Aulas:</strong> {{ profesor.aulas.count }}</p>
+    <p><a href="{% url 'academico:profesor_list' %}">Volver a profesores</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
+</body>
+</html>

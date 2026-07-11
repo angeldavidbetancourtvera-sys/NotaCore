@@ -1,9 +1,10 @@
 from decimal import Decimal
 
 from django.test import TestCase
+from django.urls import reverse
 
 from app_academico.models import AulaVirtual, Estudiante, Profesor
-from app_evaluaciones.forms import ActividadForm, PlanEvaluacionForm
+from app_evaluaciones.forms import ActividadForm, AsignarEstudianteForm, PlanEvaluacionForm
 from app_evaluaciones.models import PlanEvaluacion
 from app_usuarios.models import Usuario
 
@@ -67,3 +68,32 @@ class EvaluacionFormsTestCase(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('puntuacion', form.errors)
+
+    def test_profesor_and_student_routes_are_available(self) -> None:
+        self.assertEqual(reverse('evaluaciones:profesor_aulas'), '/evaluaciones/profesor/aulas/')
+        self.assertEqual(reverse('evaluaciones:profesor_estudiantes'), '/evaluaciones/profesor/estudiantes/')
+        self.assertEqual(reverse('evaluaciones:estudiante_planes'), '/evaluaciones/estudiante/planes/')
+
+    def test_assign_student_form_filters_by_cedula(self) -> None:
+        Usuario.objects.create_user(
+            cedula='E100',
+            email='est1@example.com',
+            password='12345678',
+            nombres='Luis',
+            apellidos='Márquez',
+            rol='ESTUDIANTE',
+        )
+        Usuario.objects.create_user(
+            cedula='E200',
+            email='est2@example.com',
+            password='12345678',
+            nombres='María',
+            apellidos='Pérez',
+            rol='ESTUDIANTE',
+        )
+
+        form = AsignarEstudianteForm(aula=self.aula, cedula_search='E100')
+        queryset = form.fields['estudiantes'].queryset
+
+        self.assertTrue(queryset.filter(cedula='E100').exists())
+        self.assertFalse(queryset.filter(cedula='E200').exists())

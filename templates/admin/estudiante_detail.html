@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle estudiante - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del estudiante</h1>
+    <p><strong>Nombre:</strong> {{ estudiante.usuario.get_full_name }}</p>
+    <p><strong>Cédula:</strong> {{ estudiante.usuario.cedula }}</p>
+    <p><strong>Email:</strong> {{ estudiante.usuario.email }}</p>
+    <p><strong>Representante:</strong> {{ estudiante.representante }}</p>
+    <p><strong>Teléfono:</strong> {{ estudiante.telefono_representante }}</p>
+    <p><a href="{% url 'academico:estudiante_list' %}">Volver a estudiantes</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
+</body>
+</html>

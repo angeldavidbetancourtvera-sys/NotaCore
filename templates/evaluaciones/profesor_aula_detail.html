@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de aula - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del aula</h1>
+    <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
+    <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
+    <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
+    <p><strong>Estado:</strong> {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</p>
+
+    <h2>Estudiantes</h2>
+    <ul>
+        {% for estudiante in estudiantes %}
+        <li>{{ estudiante.usuario.get_full_name }}</li>
+        {% empty %}
+        <li>No hay estudiantes matriculados.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Planes</h2>
+    <ul>
+        {% for plan in planes %}
+        <li>{{ plan.get_lapso_display }} — {{ plan.objetivo }}</li>
+        {% empty %}
+        <li>No hay planes para este aula.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:profesor_aulas' %}">Volver a aulas</a></p>
+</body>
+</html>

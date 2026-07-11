@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudiantes del profesor - NotaCore</title>
+</head>
+<body>
+    <h1>Estudiantes asignados</h1>
+    <ul>
+        {% for estudiante in estudiantes %}
+        <li>{{ estudiante.usuario.get_full_name }} — {{ estudiante.usuario.email }}</li>
+        {% empty %}
+        <li>No tienes estudiantes asignados.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al panel</a></p>
+</body>
+</html>

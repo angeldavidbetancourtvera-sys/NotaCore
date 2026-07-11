@@ -6,7 +6,44 @@
     <title>Dashboard Administrador - NotaCore</title>
 </head>
 <body>
-    <h1>¡Sistema NotaCore conectado con éxito!</h1>
-    <p>Estás viendo el panel de administración en la ruta <code>/academico/admin-dashboard/</code>.</p>
+    <h1>Panel de administración</h1>
+    <p>Resumen general del sistema.</p>
+    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+
+    <ul>
+        <li>Total de aulas: {{ total_aulas }}</li>
+        <li>Total de profesores: {{ total_profesores }}</li>
+        <li>Total de estudiantes: {{ total_estudiantes }}</li>
+    </ul>
+
+    <h2>Gestión rápida</h2>
+    <ul>
+        <li><a href="{% url 'academico:aula_list' %}">Ver aulas</a></li>
+        <li><a href="{% url 'academico:usuario_list' %}">Ver usuarios</a></li>
+        <li><a href="{% url 'academico:profesor_list' %}">Ver profesores</a></li>
+        <li><a href="{% url 'academico:estudiante_list' %}">Ver estudiantes</a></li>
+    </ul>
+
+    <h2>Aulas por año</h2>
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Año</th>
+                <th>Secciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in aulas_por_anio %}
+            <tr>
+                <td>{{ item.año_curso }}° Año</td>
+                <td>{{ item.total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No hay aulas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

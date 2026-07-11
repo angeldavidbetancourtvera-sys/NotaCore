@@ -6,6 +6,16 @@
     <title>Panel profesor</title>
 </head>
 <body>
-    <h1>Bienvenido profesor</h1>
+    <h1>Bienvenido, {{ user.get_full_name }}</h1>
+    <p>Rol: {{ user.rol }}</p>
+
+    <h2>Mis aulas</h2>
+    <ul>
+        {% for aula in user.profesor.aulas.all %}
+        <li>{{ aula.año_curso }}° Año</li>
+        {% empty %}
+        <li>No tienes aulas asignadas.</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

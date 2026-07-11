@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignar estudiantes</title>
+</head>
+<body>
+    <h1>Asignar estudiantes a un aula</h1>
+    <p><a href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al dashboard</a></p>
+
+    <form method="get" action="">
+        <label for="id_cedula_search">Buscar por cédula</label>
+        {{ form.cedula_search }}
+        <button type="submit">Buscar</button>
+        {% if cedula_search %}
+        <a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}">Limpiar</a>
+        {% endif %}
+    </form>
+
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label for="id_aula">Aula Virtual</label>
+            {{ form.aula }}
+        </p>
+        <p>
+            <label for="id_estudiantes">Seleccionar Estudiantes</label>
+            {{ form.estudiantes }}
+        </p>
+        <button type="submit">Guardar</button>
+    </form>
+</body>
+</html>

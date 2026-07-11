@@ -6,8 +6,47 @@
     <title>Dashboard del Estudiante - NotaCore</title>
 </head>
 <body>
-    <h1>Panel del Estudiante: Consulta de Evaluaciones</h1>
-    <p>Estás viendo tu panel de control como alumno en la ruta <code>/evaluaciones/estudiante/dashboard/</code>.</p>
-    <p>¡Aquí podrás consultar tus planes de evaluación activos y ver tus calificaciones registradas!</p>
+    <h1>Panel del estudiante</h1>
+    <p>Bienvenido, {{ estudiante.usuario.get_full_name }}.</p>
+    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+
+    <h2>Mis aulas</h2>
+    <ul>
+        {% for aula in aulas %}
+        <li>{{ aula.año_curso }}° Año — Profesor: {{ aula.profesor.usuario.get_full_name }}</li>
+        {% empty %}
+        <li>No estás matriculado en aulas actualmente.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Gestión</h2>
+    <ul>
+        {% if aulas.first %}
+        <li><a href="{% url 'evaluaciones:estudiante_aula_detalle' aulas.first.pk %}">Ver mi aula</a></li>
+        {% endif %}
+        <li><a href="{% url 'evaluaciones:estudiante_planes' %}">Ver planes</a></li>
+        <li><a href="{% url 'evaluaciones:estudiante_calificaciones' %}">Ver calificaciones</a></li>
+    </ul>
+
+
+
+    
+    <!--<h2>Planes de evaluación activos</h2>
+    <ul>
+        {% for plan in planes %}
+        <li>{{ plan.aula.año_curso }}° Año — {{ plan.get_lapso_display }} — {{ plan.objetivo }}</li>
+        {% empty %}
+        <li>No hay planes activos para mostrar.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Calificaciones registradas</h2>
+    <ul>
+        {% for calificacion in calificaciones %}
+        <li>{{ calificacion.actividad.titulo }}: {{ calificacion.nota_obtenida }} / {{ calificacion.actividad.puntuacion }}</li>
+        {% empty %}
+        <li>Aún no tienes calificaciones registradas.</li>
+        {% endfor %}
+    </ul>-->
 </body>
 </html>

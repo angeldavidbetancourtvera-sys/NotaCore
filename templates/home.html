@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotaCore - Inicio</title>
+</head>
+<body>
+    <h1>Bienvenido a NotaCore</h1>
+    <p>Sistema para gestionar aulas, usuarios, planes de evaluación, actividades y calificaciones.</p>
+    {% if user.is_authenticated %}
+        <p>Sesión activa como <strong>{{ user.get_full_name|default:user.cedula }}</strong> ({{ user.rol }}).</p>
+        <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+    {% else %}
+        <p>Si ya tienes cuenta, inicia sesión. Si no, crea una cuenta y elige tu rol en el formulario.</p>
+    {% endif %}
+
+    <h2>Acceso</h2>
+    <p><a href="{% url 'usuarios:login' %}">Iniciar sesión</a></p>
+    <p><a href="{% url 'usuarios:signup' %}">Crear cuenta</a></p>
+</body>
+</html>

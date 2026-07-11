@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle estudiante - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del estudiante</h1>
+    <p><strong>Nombre:</strong> {{ estudiante.usuario.get_full_name }}</p>
+    <p><strong>Cédula:</strong> {{ estudiante.usuario.cedula }}</p>
+    <p><strong>Email:</strong> {{ estudiante.usuario.email }}</p>
+    <p><strong>Representante:</strong> {{ estudiante.representante }}</p>  #En el login del estudiante pedir este requisito (representante)
+    <p><strong>Teléfono:</strong> {{ estudiante.telefono_representante }}</p>
+
+    <h2>Aulas</h2>
+    <ul>
+        {% for aula in aulas %}
+        <li>{{ aula.año_curso }}° Año</li>
+        {% empty %}
+        <li>No tiene aulas asignadas.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Calificaciones</h2>
+    <ul>
+        {% for calificacion in calificaciones %}
+        <li>{{ calificacion.actividad.titulo }} — {{ calificacion.nota_obtenida }}</li>
+        {% empty %}
+        <li>No hay calificaciones registradas.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:profesor_estudiantes' %}">Volver a estudiantes</a></p>
+</body>
+</html>

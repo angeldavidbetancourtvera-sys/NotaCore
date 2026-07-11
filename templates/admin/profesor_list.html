@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profesores - NotaCore</title>
+</head>
+<body>
+    <h1>Profesores</h1>
+    <ul>
+        {% for profesor in profesores %}
+        <li>
+            <a href="{% url 'academico:profesor_detail' profesor.pk %}">{{ profesor.usuario.get_full_name }}</a>
+            <span>— {{ profesor.usuario.email }}</span>
+        </li>
+        {% empty %}
+        <li>No hay profesores registrados.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'academico:admin_dashboard' %}">Volver al panel</a></p>
+</body>
+</html>

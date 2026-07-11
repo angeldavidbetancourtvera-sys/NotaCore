@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aulas del profesor - NotaCore</title>
+</head>
+<body>
+    <h1>Mis aulas virtuales</h1>
+    <ul>
+        {% for aula in aulas %}
+        <li>{{ aula.año_curso }}° Año — {{ aula.get_lapsos_display }} — {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</li>
+        {% empty %}
+        <li>No tienes aulas registradas.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al panel</a></p>
+</body>
+</html>

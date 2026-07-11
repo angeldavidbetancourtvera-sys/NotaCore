@@ -4,7 +4,7 @@ from typing import Any
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import QuerySet
+from django.db.models import Count, QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -66,7 +66,55 @@ class ProfesorDashboardView(ProfesorRequiredMixin, TemplateView):
         aulas = AulaVirtual.objects.filter(profesor__usuario=self.request.user).prefetch_related('matriculas')
         context['aulas'] = aulas
         context['estudiantes_mat'] = Matricula.objects.filter(aula__in=aulas).select_related('estudiante').distinct()
-        context['planes_por_lapso'] = PlanEvaluacion.objects.filter(aula__in=aulas).values('lapso').annotate(total=__import__('django.db.models').db.models.Count('id'))
+        context['planes_por_lapso'] = PlanEvaluacion.objects.filter(aula__in=aulas).values('lapso').annotate(total=Count('id')).order_by('lapso')
+        return context
+
+
+class ProfesorAulaListView(ProfesorRequiredMixin, ListView):
+    model = AulaVirtual
+    template_name = 'evaluaciones/profesor_aula_list.html'
+    context_object_name = 'aulas'
+
+    def get_queryset(self) -> QuerySet[AulaVirtual]:
+        return AulaVirtual.objects.filter(profesor__usuario=self.request.user).order_by('-fecha_creacion')
+
+
+class ProfesorAulaDetailView(ProfesorRequiredMixin, DetailView):
+    model = AulaVirtual
+    template_name = 'evaluaciones/profesor_aula_detail.html'
+    context_object_name = 'aula'
+
+    def get_queryset(self) -> QuerySet[AulaVirtual]:
+        return AulaVirtual.objects.filter(profesor__usuario=self.request.user)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['estudiantes'] = Estudiante.objects.filter(matriculas__aula=self.object).distinct()
+        context['planes'] = PlanEvaluacion.objects.filter(aula=self.object).order_by('lapso')
+        return context
+
+
+class ProfesorEstudianteListView(ProfesorRequiredMixin, ListView):
+    model = Estudiante
+    template_name = 'evaluaciones/profesor_estudiante_list.html'
+    context_object_name = 'estudiantes'
+
+    def get_queryset(self) -> QuerySet[Estudiante]:
+        return Estudiante.objects.filter(matriculas__aula__profesor__usuario=self.request.user).distinct().order_by('usuario__apellidos', 'usuario__nombres')
+
+
+class ProfesorEstudianteDetailView(ProfesorRequiredMixin, DetailView):
+    model = Estudiante
+    template_name = 'evaluaciones/profesor_estudiante_detail.html'
+    context_object_name = 'estudiante'
+
+    def get_queryset(self) -> QuerySet[Estudiante]:
+        return Estudiante.objects.filter(matriculas__aula__profesor__usuario=self.request.user).distinct()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['aulas'] = AulaVirtual.objects.filter(matriculas__estudiante=self.object).order_by('año_curso')
+        context['calificaciones'] = Calificacion.objects.filter(estudiante=self.object).select_related('actividad', 'actividad__plan')
         return context
 
 
@@ -77,6 +125,20 @@ class PlanEvaluacionListView(ProfesorRequiredMixin, ListView):
 
     def get_queryset(self) -> QuerySet[PlanEvaluacion]:
         return PlanEvaluacion.objects.filter(aula__profesor__usuario=self.request.user).select_related('aula').order_by('-pk')
+
+
+class PlanEvaluacionDetailView(ProfesorRequiredMixin, DetailView):
+    model = PlanEvaluacion
+    template_name = 'evaluaciones/plan_detail.html'
+    context_object_name = 'plan'
+
+    def get_queryset(self) -> QuerySet[PlanEvaluacion]:
+        return PlanEvaluacion.objects.filter(aula__profesor__usuario=self.request.user).select_related('aula')
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['actividades'] = Actividad.objects.filter(plan=self.object).order_by('fecha')
+        return context
 
 
 class PlanEvaluacionCreateView(ProfesorRequiredMixin, CreateView):
@@ -191,12 +253,14 @@ class AsignarEstudianteView(ProfesorRequiredMixin, AulaPropiaMixin, FormView):
     def get_form_kwargs(self) -> dict[str, Any]:
         kwargs = super().get_form_kwargs()
         kwargs['aula'] = self.get_aula()
+        kwargs['cedula_search'] = self.request.GET.get('cedula_search', '') or self.request.POST.get('cedula_search', '')
         return kwargs
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['aulas'] = AulaVirtual.objects.filter(profesor__usuario=self.request.user).order_by('año_curso')
         context['aula'] = self.get_aula()
+        context['cedula_search'] = self.request.GET.get('cedula_search', '')
         return context
 
     def form_valid(self, form: AsignarEstudianteForm) -> HttpResponse:
@@ -230,6 +294,66 @@ class MatrizNotasView(ProfesorRequiredMixin, AulaPropiaMixin, TemplateView):
         context['actividades'] = actividades
         context['matriz'] = matriz
         return context
+
+
+class EvaluarPlanView(ProfesorRequiredMixin, TemplateView):
+    template_name = 'evaluaciones/evaluar_plan.html'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        plan = get_object_or_404(PlanEvaluacion, pk=kwargs['pk'], aula__profesor__usuario=self.request.user)
+        estudiantes = Estudiante.objects.filter(matriculas__aula=plan.aula).distinct()
+        actividades = Actividad.objects.filter(plan=plan).order_by('fecha')
+        evaluaciones: list[dict[str, Any]] = []
+
+        for estudiante in estudiantes:
+            items = []
+            for actividad in actividades:
+                calificacion = Calificacion.objects.filter(actividad=actividad, estudiante=estudiante).first()
+                items.append({
+                    'actividad': actividad,
+                    'calificacion': calificacion,
+                    'nota': calificacion.nota_obtenida if calificacion else '',
+                    'observacion': calificacion.observacion if calificacion else '',
+                })
+            evaluaciones.append({'estudiante': estudiante, 'items': items})
+
+        context['plan'] = plan
+        context['aula'] = plan.aula
+        context['estudiantes'] = estudiantes
+        context['actividades'] = actividades
+        context['evaluaciones'] = evaluaciones
+        return context
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        plan = get_object_or_404(PlanEvaluacion, pk=kwargs['pk'], aula__profesor__usuario=request.user)
+        estudiantes = Estudiante.objects.filter(matriculas__aula=plan.aula).distinct()
+        created_count = 0
+        updated_count = 0
+
+        for estudiante in estudiantes:
+            for actividad in Actividad.objects.filter(plan=plan):
+                nota_raw = request.POST.get(f'nota_{estudiante.pk}_{actividad.pk}')
+                observacion = request.POST.get(f'observacion_{estudiante.pk}_{actividad.pk}', '')
+                if nota_raw in {None, '', 'null'}:
+                    continue
+                nota = Decimal(str(nota_raw))
+                if nota > actividad.puntuacion:
+                    continue
+                calificacion, created = Calificacion.objects.get_or_create(
+                    actividad=actividad,
+                    estudiante=estudiante,
+                    defaults={'nota_obtenida': nota, 'observacion': observacion},
+                )
+                if created:
+                    created_count += 1
+                else:
+                    calificacion.nota_obtenida = nota
+                    calificacion.observacion = observacion
+                    calificacion.save(update_fields=['nota_obtenida', 'observacion'])
+                    updated_count += 1
+
+        return redirect('evaluaciones:profesor_plan_detalle', pk=plan.pk)
 
 
 class GuardarNotasView(ProfesorRequiredMixin, View):
@@ -333,6 +457,36 @@ class EstudianteDetalleAulaView(EstudianteRequiredMixin, DetailView):
 
         context['planes'] = planes
         context['calificaciones'] = calificaciones
+        return context
+
+
+class EstudiantePlanesView(EstudianteRequiredMixin, ListView):
+    model = PlanEvaluacion
+    template_name = 'evaluaciones/estudiante_planes.html'
+    context_object_name = 'planes'
+
+    def get_queryset(self) -> QuerySet[PlanEvaluacion]:
+        estudiante = getattr(self.request.user, 'estudiante', None)
+        if estudiante is None:
+            return PlanEvaluacion.objects.none()
+        return PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante, activo=True).select_related('aula').order_by('aula__año_curso', 'lapso')
+
+
+class EstudiantePlanDetailView(EstudianteRequiredMixin, DetailView):
+    model = PlanEvaluacion
+    template_name = 'evaluaciones/estudiante_plan_detail.html'
+    context_object_name = 'plan'
+
+    def get_queryset(self) -> QuerySet[PlanEvaluacion]:
+        estudiante = getattr(self.request.user, 'estudiante', None)
+        if estudiante is None:
+            return PlanEvaluacion.objects.none()
+        return PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante, activo=True)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['actividades'] = Actividad.objects.filter(plan=self.object).order_by('fecha')
+        context['calificaciones'] = Calificacion.objects.filter(estudiante=getattr(self.request.user, 'estudiante', None), actividad__plan=self.object)
         return context
 
 

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar usuario - NotaCore</title>
+</head>
+<body>
+    <h1>Eliminar usuario</h1>
+    <p>¿Seguro que deseas eliminar a {{ usuario.get_full_name }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Sí, eliminar</button>
+        <a href="{% url 'academico:usuario_list' %}">Cancelar</a>
+    </form>
+</body>
+</html>

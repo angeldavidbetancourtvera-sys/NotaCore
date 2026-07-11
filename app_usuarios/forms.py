@@ -1,5 +1,8 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.exceptions import ValidationError
+
 from .models import Usuario
 
 
@@ -65,13 +68,32 @@ class UsuarioRegistroForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-select'}),
         label="Rol"
     )
+    clave_maestra = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Ingrese la clave maestra'}),
+        label='Clave maestra'
+    )
 
     class Meta:
         model = Usuario
-        fields = ['cedula', 'email', 'nombres', 'apellidos', 'rol', 'password1', 'password2']
+        fields = ['cedula', 'email', 'nombres', 'apellidos', 'rol', 'clave_maestra', 'password1', 'password2']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Eliminar el campo 'username' heredado de UserCreationForm
         if 'username' in self.fields:
             del self.fields['username']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        rol = cleaned_data.get('rol')
+        clave_maestra = cleaned_data.get('clave_maestra', '')
+        if rol in {'ADMIN', 'PROFESOR'} and clave_maestra != getattr(settings, 'CLAVE_ADMINISTRATIVA_MAESTRA', ''):
+            self.add_error('clave_maestra', 'La clave maestra es obligatoria para este rol.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.rol = self.cleaned_data.get('rol', user.rol)
+        if commit:
+            user.save()
+        return user

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.pk %}Editar aula{% else %}Crear aula{% endif %} - NotaCore</title>
+</head>
+<body>
+    <h1>{% if form.instance.pk %}Editar aula{% else %}Crear aula{% endif %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Guardar</button>
+        {% if form.instance.pk %}
+        <a href="{% url 'academico:aula_detail' form.instance.pk %}">Regresar</a>
+        {% else %}
+        <a href="{% url 'academico:aula_list' %}">Regresar</a>
+        {% endif %}
+    </form>
+</body>
+</html>

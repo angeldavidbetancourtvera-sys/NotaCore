@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, FormView
+from django.views.generic import DetailView, TemplateView, ListView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin  # ✅ USAMOS ESTO TEMPORALMENTE
 from django.db.models import Count, Q
@@ -40,18 +40,28 @@ class AulaListView(LoginRequiredMixin, ListView): # TODO: Cambiar a AdminRequire
         return queryset
 
 
+class AulaDetailView(LoginRequiredMixin, DetailView): # TODO: Cambiar a AdminRequiredMixin
+    model = AulaVirtual
+    template_name = 'admin/aula_detail.html'
+    context_object_name = 'aula'
+
+
 class AulaCreateView(LoginRequiredMixin, CreateView): # TODO: Cambiar a AdminRequiredMixin
     model = AulaVirtual
     form_class = AulaVirtualForm
-    template_name = 'admin/aula_list.html'
-    success_url = reverse_lazy('academico:aula_list')
+    template_name = 'admin/aula_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('academico:aula_detail', kwargs={'pk': self.object.pk})
 
 
 class AulaUpdateView(LoginRequiredMixin, UpdateView): # TODO: Cambiar a AdminRequiredMixin
     model = AulaVirtual
     form_class = AulaVirtualForm
-    template_name = 'admin/aula_list.html'
-    success_url = reverse_lazy('academico:aula_list')
+    template_name = 'admin/aula_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('academico:aula_detail', kwargs={'pk': self.object.pk})
 
     def get_initial(self):
         initial = super().get_initial()
@@ -64,6 +74,11 @@ class AulaDeleteView(LoginRequiredMixin, DeleteView): # TODO: Cambiar a AdminReq
     model = AulaVirtual
     template_name = 'admin/aula_confirm_delete.html'
     success_url = reverse_lazy('academico:aula_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['aula'] = self.object
+        return context
 
 
 # --- LISTA DE USUARIOS ---
@@ -97,3 +112,37 @@ class UsuarioDeleteView(LoginRequiredMixin, DeleteView): # TODO: Cambiar a Admin
     model = Usuario
     template_name = 'admin/usuario_confirm_delete.html'
     success_url = reverse_lazy('academico:usuario_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['usuario'] = self.object
+        return context
+
+
+class ProfesorListView(LoginRequiredMixin, ListView):
+    model = Profesor
+    template_name = 'admin/profesor_list.html'
+    context_object_name = 'profesores'
+
+
+class ProfesorDetailView(LoginRequiredMixin, DetailView):
+    model = Profesor
+    template_name = 'admin/profesor_detail.html'
+    context_object_name = 'profesor'
+
+    def get_object(self, queryset=None):
+        queryset = queryset or self.get_queryset()
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        return queryset.filter(pk=pk).first()
+
+
+class EstudianteListView(LoginRequiredMixin, ListView):
+    model = Estudiante
+    template_name = 'admin/estudiante_list.html'
+    context_object_name = 'estudiantes'
+
+
+class EstudianteDetailView(LoginRequiredMixin, DetailView):
+    model = Estudiante
+    template_name = 'admin/estudiante_detail.html'
+    context_object_name = 'estudiante'

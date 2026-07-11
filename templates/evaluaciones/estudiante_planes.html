@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de evaluación - NotaCore</title>
+</head>
+<body>
+    <h1>Planes de evaluación</h1>
+    <ul>
+        {% for plan in planes %}
+        <li>
+            <strong>{{ plan.aula.año_curso }}° Año</strong> — {{ plan.get_lapso_display }} — {{ plan.objetivo }}
+        </li>
+        {% empty %}
+        <li>No hay planes disponibles.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
+</body>
+</html>
