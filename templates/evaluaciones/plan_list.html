@@ -13,8 +13,6 @@
         {% for plan in planes %}
         <li>
             <strong>{{ plan.aula.año_curso }}° Año</strong> — {{ plan.get_lapso_display }} — {{ plan.objetivo }}
-            <br>
-            <a href="{% url 'evaluaciones:profesor_actividad_nuevo' plan.pk %}">Agregar actividad</a>
         </li>
         {% empty %}
         <li>No hay planes creados.</li>

@@ -11,6 +11,7 @@
     <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
 
     <h2>Mis aulas</h2>
+    <p><a href="{% url 'evaluaciones:estudiante_aulas' %}">Ver todas mis aulas</a></p>
     <ul>
         {% for aula in aulas %}
         <li>{{ aula.año_curso }}° Año — Profesor: {{ aula.profesor.usuario.get_full_name }}</li>
@@ -21,9 +22,6 @@
 
     <h2>Gestión</h2>
     <ul>
-        {% if aulas.first %}
-        <li><a href="{% url 'evaluaciones:estudiante_aula_detalle' aulas.first.pk %}">Ver mi aula</a></li>
-        {% endif %}
         <li><a href="{% url 'evaluaciones:estudiante_planes' %}">Ver planes</a></li>
         <li><a href="{% url 'evaluaciones:estudiante_calificaciones' %}">Ver calificaciones</a></li>
     </ul>

@@ -22,12 +22,48 @@
     </ul>
 
     <h2>Planes</h2>
-    <ul>
+    {% if planes %}
         {% for plan in planes %}
-        <li>{{ plan.get_lapso_display }} — {{ plan.objetivo }}</li>
-        {% empty %}
-        <li>No hay planes para este aula.</li>
+        <div style="margin-bottom: 1.5rem;">
+            <h3>{{ plan.get_lapso_display }} — {{ plan.activo|yesno:"Activo,Inactivo" }}</h3>
+            {% if plan.aprobado_por_admin %}
+            <p style="color: green;"><strong>Aprobado por admin</strong></p>
+            {% endif %}
+            <p><strong>Objetivo general:</strong> {{ plan.objetivo }}</p>
+            <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Objetivo</th>
+                        <th>Método</th>
+                        <th>Ponderación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+                    <tr>
+                        <td>{{ objetivo }}</td>
+                        <td>{{ metodo }}</td>
+                        <td>{{ puntuacion }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No hay objetivos detallados registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Ver detalle completo</a></p>
+        </div>
         {% endfor %}
+    {% else %}
+        <p>No hay planes para este aula.</p>
+    {% endif %}
+
+    <h2>Acciones del aula</h2>
+    <ul>
+        <li><a href="{% url 'evaluaciones:profesor_plan_nuevo' %}">Crear plan</a></li>
+        <li><a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}?aula={{ aula.pk }}">Asignar estudiantes</a></li>
     </ul>
     <p><a href="{% url 'evaluaciones:profesor_aulas' %}">Volver a aulas</a></p>
 </body>

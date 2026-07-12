@@ -21,14 +21,45 @@
         {% endfor %}
     </ul>
 
-    <h2>Mis calificaciones</h2>
-    <ul>
-        {% for calificacion in calificaciones %}
-        <li>{{ calificacion.actividad.titulo }} — {{ calificacion.nota_obtenida }}</li>
-        {% empty %}
-        <li>No hay calificaciones registradas para este plan.</li>
-        {% endfor %}
-    </ul>
+    <h2>Calificación por objetivos</h2>
+    {% if plan.objetivos_detallados %}
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Objetivo</th>
+                <th>Ponderación</th>
+                <th>Nota</th>
+                <th>Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in objetivos_con_evaluaciones %}
+            <tr>
+                <td>{{ item.objetivo }}</td>
+                <td>{{ item.puntuacion|stringformat:".2f" }}</td>
+                <td>
+                    {% if item.evaluacion %}
+                        {{ item.evaluacion.nota_obtenida|stringformat:".2f" }}
+                    {% else %}
+                        &mdash;
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.evaluacion %}
+                        {{ item.evaluacion.observacion|default:"Sin observación" }}
+                    {% else %}
+                        &mdash;
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No hay objetivos detallados registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aún no hay calificaciones registradas para este plan.</p>
+    {% endif %}
     <p><a href="{% url 'evaluaciones:estudiante_planes' %}">Volver a planes</a></p>
 </body>
 </html>

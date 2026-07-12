@@ -9,11 +9,35 @@
     <h1>Detalle del plan</h1>
     <p><strong>Aula:</strong> {{ plan.aula.año_curso }}° Año</p>
     <p><strong>Lapso:</strong> {{ plan.get_lapso_display }}</p>
-    <p><strong>Objetivo:</strong> {{ plan.objetivo }}</p>
-    <p><strong>Método:</strong> {{ plan.metodo }}</p>
     <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
+    <h2>Objetivos del plan</h2>
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Objetivo</th>
+                <th>Método</th>
+                <th>Ponderación</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+            <tr>
+                <td>{{ objetivo }}</td>
+                <td>{{ metodo }}</td>
+                <td>{{ puntuacion }}</td>
+                <td>
+                    <a href="{% url 'evaluaciones:profesor_objetivo_evaluar' plan.pk forloop.counter0 %}">Evaluar objetivo</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No hay objetivos detallados registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-    <p><a href="{% url 'evaluaciones:profesor_plan_evaluar' plan.pk %}">Evaluar este plan</a></p>
 
     <h2>Actividades</h2>
     <ul>

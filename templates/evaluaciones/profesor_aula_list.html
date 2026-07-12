@@ -9,7 +9,11 @@
     <h1>Mis aulas virtuales</h1>
     <ul>
         {% for aula in aulas %}
-        <li>{{ aula.año_curso }}° Año — {{ aula.get_lapsos_display }} — {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</li>
+        <li>
+            <a href="{% url 'evaluaciones:profesor_aula_detalle' aula.pk %}">
+                {{ aula.año_curso }}° Año — {{ aula.get_lapsos_display }} — {% if aula.activo %}Activa{% else %}Inactiva{% endif %}
+            </a>
+        </li>
         {% empty %}
         <li>No tienes aulas registradas.</li>
         {% endfor %}

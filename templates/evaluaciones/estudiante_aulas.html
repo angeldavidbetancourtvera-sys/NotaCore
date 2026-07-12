@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis aulas - NotaCore</title>
+</head>
+<body>
+    <h1>Mis aulas virtuales</h1>
+    <p>Selecciona el aula en la que deseas entrar.</p>
+    <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
+
+    {% if aulas %}
+    <ul>
+        {% for aula in aulas %}
+        <li>
+            <strong>{{ aula.año_curso }}° Año</strong> — Profesor: {{ aula.profesor.usuario.get_full_name }}
+            <br>
+            <span>Lapsos: {{ aula.get_lapsos_display }}</span>
+            <br>
+            <a href="{% url 'evaluaciones:estudiante_aula_detalle' aula.pk %}">Entrar al aula</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No estás matriculado en ninguna aula virtual.</p>
+    {% endif %}
+</body>
+</html>

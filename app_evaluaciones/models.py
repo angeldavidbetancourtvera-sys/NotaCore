@@ -14,7 +14,10 @@ class PlanEvaluacion(models.Model):
     objetivo = models.TextField()
     metodo = models.CharField(max_length=100)
     puntuacion_max = models.DecimalField(max_digits=4, decimal_places=2)
+    objetivos_detallados = models.JSONField(default=list, blank=True)
     activo = models.BooleanField(default=True)
+    aprobado_por_admin = models.BooleanField(default=False)
+    finalizado = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.aula} - {self.get_lapso_display()} - {self.objetivo[:30]}"
@@ -50,6 +53,32 @@ class Actividad(models.Model):
     class Meta:
         db_table = 'actividades'
         ordering = ['fecha']
+
+
+class EvaluacionObjetivo(models.Model):
+    plan = models.ForeignKey(PlanEvaluacion, on_delete=models.CASCADE, related_name='evaluaciones_objetivo')
+    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='evaluaciones_objetivo')
+    objetivo = models.CharField(max_length=500)
+    nota_obtenida = models.DecimalField(max_digits=4, decimal_places=2)
+    observacion = models.TextField(blank=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    finalizado = models.BooleanField(default=False)
+
+    def clean(self) -> None:
+        super().clean()
+        if self.plan_id and self.nota_obtenida is not None:
+            ponderacion = Decimal('0.00')
+            for row in self.plan.objetivos_detallados:
+                if len(row) >= 3 and row[0] == self.objetivo:
+                    ponderacion = Decimal(str(row[2]))
+                    break
+            if ponderacion and self.nota_obtenida > ponderacion:
+                raise ValidationError({'nota_obtenida': f'La nota no puede exceder la ponderación del objetivo ({ponderacion}).'})
+
+    class Meta:
+        db_table = 'evaluaciones_objetivo'
+        ordering = ['-fecha_registro']
+        unique_together = ['plan', 'estudiante', 'objetivo']
 
 
 class Calificacion(models.Model):

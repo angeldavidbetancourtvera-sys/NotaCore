@@ -8,9 +8,64 @@
 <body>
     <h1>Detalle del aula</h1>
     <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
-    <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
+    <p><strong>Profesor responsable:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
     <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
     <p><strong>Estado:</strong> {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</p>
+
+    <h2>Estudiantes pertenecientes al aula</h2>
+    <ul>
+        {% for matricula in aula.matriculas.all %}
+        <li>{{ matricula.estudiante.usuario.get_full_name }}</li>
+        {% empty %}
+        <li>No hay estudiantes matriculados.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Plan de evaluación</h2>
+    {% if aula.planes.exists %}
+        <form method="post">
+            {% csrf_token %}
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Lapso</th>
+                        <th>Objetivo</th>
+                        <th>Objetivos detallados</th>
+                        <th>Aprobado por admin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in aula.planes.all %}
+                    <tr>
+                        <td>{{ plan.get_lapso_display }}</td>
+                        <td>{{ plan.objetivo }}</td>
+                        <td>
+                            {% if plan.objetivos_detallados %}
+                                <ul>
+                                    {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+                                    <li>{{ objetivo }} — {{ metodo }} — {{ puntuacion }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span>No hay objetivos detallados.</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="aprobado_{{ plan.pk }}" {% if plan.activo %}checked{% endif %}>
+                                Aprob por admin
+                            </label>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><button type="submit">Guardar aprobación</button></p>
+        </form>
+    {% else %}
+        <p>No hay planes de evaluación para este aula.</p>
+    {% endif %}
+
     <p><a href="{% url 'academico:aula_update' aula.pk %}">Editar</a> | <a href="{% url 'academico:aula_list' %}">Volver a la lista</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
 </body>
 </html>

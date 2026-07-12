@@ -1,18 +1,27 @@
+from decimal import Decimal
+from typing import Any
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from .models import PlanEvaluacion, Actividad, Calificacion
 from app_academico.models import AulaVirtual, Estudiante, Matricula
 from app_usuarios.models import Usuario
 
+from .models import Actividad, Calificacion, PlanEvaluacion
+
 
 class PlanEvaluacionForm(forms.ModelForm):
-    """
-    Formulario para que los profesores creen el Plan de Evaluación por Lapso.
-    """
+    """Formulario para crear planes con una tabla editable de objetivos y ponderaciones."""
 
-    def __init__(self, *args, **kwargs):
+    aula = forms.ModelChoiceField(queryset=AulaVirtual.objects.none(), label='Aula', required=True)
+    lapso = forms.ChoiceField(choices=[('I', 'I Lapso'), ('II', 'II Lapso'), ('III', 'III Lapso')], label='Lapso', required=True)
+    activo = forms.BooleanField(required=False, initial=True, label='Activo')
+    objetivo = forms.CharField(required=False, widget=forms.HiddenInput())
+    metodo = forms.CharField(required=False, widget=forms.HiddenInput())
+    puntuacion_max = forms.DecimalField(required=False, label='Puntuación total', widget=forms.HiddenInput())
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
@@ -22,33 +31,114 @@ class PlanEvaluacionForm(forms.ModelForm):
 
         self.fields['aula'].queryset = aulas
         self.fields['aula'].empty_label = 'Seleccione un aula'
+        self.fields['aula'].widget.attrs.update({'class': 'form-select'})
+        self.fields['lapso'].widget.attrs.update({'class': 'form-select'})
+        self.fields['activo'].widget.attrs.update({'class': 'form-check-input'})
 
-    def clean(self):
+        for index in range(1, 7):
+            self.fields[f'objetivo_{index}'] = forms.CharField(required=False, max_length=500, label='Objetivo', widget=forms.TextInput(attrs={'class': 'form-control'}))
+            self.fields[f'metodo_{index}'] = forms.CharField(required=False, max_length=150, label='Método', widget=forms.TextInput(attrs={'class': 'form-control'}))
+            self.fields[f'puntuacion_{index}'] = forms.DecimalField(required=False, min_value=0, max_value=20, max_digits=4, decimal_places=2, label='Puntos', widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+
+        if self.instance and self.instance.pk:
+            self.fields['objetivo_1'].initial = self.instance.objetivo
+            self.fields['metodo_1'].initial = self.instance.metodo
+            self.fields['puntuacion_1'].initial = self.instance.puntuacion_max
+            if self.instance.objetivos_detallados:
+                for index, row in enumerate(self.instance.objetivos_detallados[:6], start=1):
+                    self.fields[f'objetivo_{index}'].initial = row[0] if len(row) > 0 else ''
+                    self.fields[f'metodo_{index}'].initial = row[1] if len(row) > 1 else ''
+                    self.fields[f'puntuacion_{index}'].initial = row[2] if len(row) > 2 else ''
+
+    def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()
         aula = cleaned_data.get('aula')
-        puntuacion_max = cleaned_data.get('puntuacion_max')
-        lapso = cleaned_data.get('lapso')
+        total = Decimal('0.00')
+        rows: list[tuple[str, str, Decimal]] = []
 
-        if aula and puntuacion_max is not None:
-            existing_total = PlanEvaluacion.objects.filter(aula=aula).exclude(pk=self.instance.pk)
-            existing_total = existing_total.aggregate(total=models.Sum('puntuacion_max'))['total'] or 0
-            if float(existing_total) + float(puntuacion_max) > 20:
-                self.add_error('puntuacion_max', 'La suma de los planes de evaluación del aula no puede superar 20 puntos.')
+        for index in range(1, 7):
+            objetivo = (cleaned_data.get(f'objetivo_{index}', '') or '').strip()
+            metodo = (cleaned_data.get(f'metodo_{index}', '') or '').strip()
+            puntuacion = cleaned_data.get(f'puntuacion_{index}')
+            if objetivo or metodo or puntuacion is not None:
+                if not objetivo:
+                    self.add_error(f'objetivo_{index}', 'El objetivo es obligatorio si se registra una fila.')
+                if not metodo:
+                    self.add_error(f'metodo_{index}', 'El método es obligatorio si se registra una fila.')
+                if puntuacion is None:
+                    self.add_error(f'puntuacion_{index}', 'La ponderación es obligatoria si se registra una fila.')
+                else:
+                    total += Decimal(str(puntuacion))
+                    rows.append((objetivo, metodo, Decimal(str(puntuacion))))
 
+        if not rows:
+            legacy_objetivo = (cleaned_data.get('objetivo') or '').strip()
+            legacy_metodo = (cleaned_data.get('metodo') or '').strip()
+            legacy_puntuacion = cleaned_data.get('puntuacion_max')
+            if legacy_objetivo or legacy_metodo or legacy_puntuacion is not None:
+                rows.append((legacy_objetivo, legacy_metodo, Decimal(str(legacy_puntuacion or 0))))
+                total = Decimal(str(legacy_puntuacion or 0))
+
+        if len(rows) > 6:
+            self.add_error('objetivo_1', 'No puede registrar más de 6 objetivos.')
+        if total != Decimal('20.00'):
+            self.add_error('puntuacion_max', 'La suma de las ponderaciones debe dar exactamente 20 puntos.')
+
+        if aula is not None:
+            existing_total = PlanEvaluacion.objects.filter(aula=aula).exclude(pk=self.instance.pk).aggregate(total=models.Sum('puntuacion_max'))['total'] or Decimal('0.00')
+            if Decimal(str(existing_total)) + total > Decimal('20.00'):
+                self.add_error('aula', 'La suma de los planes del aula no puede exceder 20 puntos.')
+
+        cleaned_data['puntuacion_max'] = total
         return cleaned_data
+
+    def save(self, commit: bool = True) -> PlanEvaluacion:
+        instance: PlanEvaluacion = super().save(commit=False)
+        rows: list[tuple[str, str, Decimal]] = []
+        total = Decimal('0.00')
+        for index in range(1, 7):
+            objetivo = (self.cleaned_data.get(f'objetivo_{index}', '') or '').strip()
+            metodo = (self.cleaned_data.get(f'metodo_{index}', '') or '').strip()
+            puntuacion = self.cleaned_data.get(f'puntuacion_{index}')
+            if not objetivo and not metodo and puntuacion is None:
+                continue
+            if objetivo and metodo and puntuacion is not None:
+                rows.append((objetivo, metodo, Decimal(str(puntuacion))))
+                total += Decimal(str(puntuacion))
+
+        if not rows:
+            legacy_objetivo = (self.cleaned_data.get('objetivo') or '').strip()
+            legacy_metodo = (self.cleaned_data.get('metodo') or '').strip()
+            legacy_puntuacion = self.cleaned_data.get('puntuacion_max')
+            if legacy_objetivo or legacy_metodo or legacy_puntuacion is not None:
+                rows.append((legacy_objetivo, legacy_metodo, Decimal(str(legacy_puntuacion or 0))))
+                total = Decimal(str(legacy_puntuacion or 0))
+
+        if not rows:
+            instance.objetivo = ''
+            instance.metodo = ''
+            instance.puntuacion_max = Decimal('0.00')
+            instance.objetivos_detallados = []
+        else:
+            first_row = rows[0]
+            instance.objetivo = first_row[0]
+            instance.metodo = first_row[1]
+            instance.puntuacion_max = total
+            serializable_rows: list[list[Any]] = []
+            for objetivo, metodo, puntuacion in rows:
+                serializable_rows.append([
+                    objetivo,
+                    metodo,
+                    float(puntuacion),
+                ])
+            instance.objetivos_detallados = serializable_rows
+        if commit:
+            instance.save()
+        return instance
 
     class Meta:
         model = PlanEvaluacion
-        fields = ['aula', 'lapso', 'objetivo', 'metodo', 'puntuacion_max', 'activo']
-
-        widgets = {
-            'aula': forms.Select(attrs={'class': 'form-select'}),
-            'lapso': forms.Select(attrs={'class': 'form-select'}),
-            'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Ej. Desarrollar ecuaciones de segundo grado...'}),
-            'metodo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Exposición, Taller, Prueba Escrita...'}),
-            'puntuacion_max': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Máximo 20.00'}),
-            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
+        fields = ['aula', 'lapso', 'activo']
 
 
 class ActividadForm(forms.ModelForm):

@@ -1,5 +1,41 @@
+from django import forms
 from django.contrib import admin
-from .models import Profesor, Estudiante, AulaVirtual, Matricula
+
+from app_usuarios.models import Usuario
+
+from .models import AulaVirtual, Estudiante, Matricula, Profesor
+
+
+class AulaVirtualAdminForm(forms.ModelForm):
+    profesor = forms.ModelChoiceField(
+        queryset=Usuario.objects.none(),
+        label='Profesor',
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+
+    class Meta:
+        model = AulaVirtual
+        fields = ['año_curso', 'lapsos', 'profesor', 'activo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profesor'].queryset = Usuario.objects.filter(rol='PROFESOR').order_by('apellidos', 'nombres', 'cedula')
+        self.fields['profesor'].label_from_instance = lambda obj: f"{obj.get_full_name()} ({obj.cedula})"
+        if self.instance and self.instance.pk and self.instance.profesor_id:
+            self.initial['profesor'] = self.instance.profesor.usuario
+
+    def save(self, commit=True):
+        usuario_profesor = self.cleaned_data.get('profesor')
+        profesor = None
+        if usuario_profesor is not None:
+            profesor, _ = Profesor.objects.get_or_create(usuario=usuario_profesor)
+        instance = super().save(commit=False)
+        if profesor is not None:
+            instance.profesor = profesor
+        if commit:
+            instance.save()
+        return instance
 
 
 @admin.register(Profesor)
@@ -26,10 +62,11 @@ class EstudianteAdmin(admin.ModelAdmin):
 
 @admin.register(AulaVirtual)
 class AulaVirtualAdmin(admin.ModelAdmin):
+    form = AulaVirtualAdminForm
     list_display = ['__str__', 'año_curso', 'get_lapsos_display', 'profesor', 'activo', 'fecha_creacion']
     search_fields = ['profesor__usuario__nombres', 'profesor__usuario__apellidos']
     list_filter = ['año_curso', 'activo', 'fecha_creacion']
-    
+
     def get_lapsos_display(self, obj):
         return ', '.join(obj.lapsos) if obj.lapsos else 'Sin lapsos'
     get_lapsos_display.short_description = 'Lapsos'

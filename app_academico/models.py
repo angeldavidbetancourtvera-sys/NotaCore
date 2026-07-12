@@ -1,7 +1,7 @@
-from django.db import models
+from typing import Any
+
 from django.conf import settings
-from typing import Optional
-import json
+from django.db import models
 
 
 class Profesor(models.Model):
@@ -39,35 +39,34 @@ class Estudiante(models.Model):
 
 
 class AulaVirtual(models.Model):
+    LAPSO_CHOICES: tuple[tuple[str, str], ...] = (
+        ('I', 'I Lapso'),
+        ('II', 'II Lapso'),
+        ('III', 'III Lapso'),
+    )
+
     año_curso = models.IntegerField(choices=[(i, f'{i}° Año') for i in range(1, 6)])
-    lapsos = models.JSONField(default=list)  # ['I', 'II', 'III']
+    lapsos = models.JSONField(default=list)
     profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name='aulas')
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self) -> str:
         return f"{self.año_curso}° Año - {self.profesor.usuario.get_full_name()}"
-    
+
     def get_lapsos_display(self) -> str:
         lapsos = self.lapsos
-        if lapsos is None:
+        if not lapsos:
             return 'Sin lapsos'
         if isinstance(lapsos, str):
             return lapsos
         if isinstance(lapsos, (list, tuple, set)):
-            valores = []
-            for item in lapsos:
-                if item is None:
-                    continue
-                if isinstance(item, str):
-                    valores.append(item)
-                else:
-                    valores.append(str(item))
+            valores = [str(item) for item in lapsos if item is not None]
             return ', '.join(valores) if valores else 'Sin lapsos'
         if isinstance(lapsos, dict):
             return ', '.join(str(value) for value in lapsos.values()) if lapsos else 'Sin lapsos'
         return str(lapsos)
-    
+
     class Meta:
         db_table = 'aulas_virtuales'
         ordering = ['-fecha_creacion']

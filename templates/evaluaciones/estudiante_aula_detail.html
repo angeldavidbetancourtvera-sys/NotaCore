@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del aula - NotaCore</title>
+</head>
+<body>
+    <h1>Detalle del aula</h1>
+    <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
+    <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
+    <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
+
+    <h2>Plan de evaluación</h2>
+    {% if planes %}
+        {% for plan in planes %}
+        <div style="margin-bottom: 1.5rem;">
+            <h3>{{ plan.get_lapso_display }}</h3>
+            <p><strong>Objetivo general:</strong> {{ plan.objetivo }}</p>
+            <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Objetivo</th>
+                        <th>Método</th>
+                        <th>Ponderación</th>
+                        <th>Calificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in plan_rows %}
+                        {% if row.plan.pk == plan.pk %}
+                            {% for fila in row.filas %}
+                            <tr>
+                                <td>{{ fila.objetivo }}</td>
+                                <td>{{ fila.metodo }}</td>
+                                <td>{{ fila.puntuacion|stringformat:".2f" }}</td>
+                                <td>
+                                    {% if fila.evaluacion %}
+                                        {{ fila.evaluacion.nota_obtenida|stringformat:".2f" }}
+                                    {% else %}
+                                        &mdash;
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">No hay objetivos detallados registrados para este plan.</td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><a href="{% url 'evaluaciones:estudiante_plan_detalle' plan.pk %}">Ver detalle del plan</a></p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay planes activos para este aula.</p>
+    {% endif %}
+
+    <p><a href="{% url 'evaluaciones:estudiante_planes' %}">Volver a planes</a></p>
+</body>
+</html>

@@ -1,22 +1,27 @@
+from typing import Any
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q, QuerySet
 from django.shortcuts import render, redirect
-from django.views.generic import DetailView, TemplateView, ListView, CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin  # ✅ USAMOS ESTO TEMPORALMENTE
-from django.db.models import Count, Q
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
+
+from app_evaluaciones.models import PlanEvaluacion
 
 # TODO: Cuando P1 termine, descomenta la siguiente línea y borra LoginRequiredMixin
-# from app_usuarios.permisos import AdminRequiredMixin 
+# from app_usuarios.permisos import AdminRequiredMixin
 
-from .models import AulaVirtual, Matricula, Profesor, Estudiante
 from app_usuarios.models import Usuario
+
 from .forms import AulaVirtualForm, UsuarioSearchForm
+from .models import AulaVirtual, Estudiante, Matricula, Profesor
 
 
 # --- DASHBOARD ADMIN ---
 class AdminDashboardView(LoginRequiredMixin, TemplateView): # TODO: Cambiar a AdminRequiredMixin
     template_name = 'admin/dashboard.html'
-    
-    def get_context_data(self, **kwargs):
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['total_aulas'] = AulaVirtual.objects.count()
         context['total_profesores'] = Usuario.objects.filter(rol='PROFESOR').count()
@@ -32,7 +37,7 @@ class AulaListView(LoginRequiredMixin, ListView): # TODO: Cambiar a AdminRequire
     context_object_name = 'aulas'
     paginate_by = 10
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[AulaVirtual]:
         queryset = super().get_queryset()
         año = self.request.GET.get('año')
         if año:
@@ -45,13 +50,21 @@ class AulaDetailView(LoginRequiredMixin, DetailView): # TODO: Cambiar a AdminReq
     template_name = 'admin/aula_detail.html'
     context_object_name = 'aula'
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        for plan in self.object.planes.all():
+            approved = f'aprobado_{plan.pk}' in request.POST
+            plan.aprobado_por_admin = approved
+            plan.save(update_fields=['aprobado_por_admin'])
+        return redirect('academico:aula_list')
+
 
 class AulaCreateView(LoginRequiredMixin, CreateView): # TODO: Cambiar a AdminRequiredMixin
     model = AulaVirtual
     form_class = AulaVirtualForm
     template_name = 'admin/aula_form.html'
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return reverse_lazy('academico:aula_detail', kwargs={'pk': self.object.pk})
 
 
@@ -60,10 +73,10 @@ class AulaUpdateView(LoginRequiredMixin, UpdateView): # TODO: Cambiar a AdminReq
     form_class = AulaVirtualForm
     template_name = 'admin/aula_form.html'
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return reverse_lazy('academico:aula_detail', kwargs={'pk': self.object.pk})
 
-    def get_initial(self):
+    def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
         if self.object.lapsos:
             initial['lapsos'] = self.object.lapsos
@@ -75,7 +88,7 @@ class AulaDeleteView(LoginRequiredMixin, DeleteView): # TODO: Cambiar a AdminReq
     template_name = 'admin/aula_confirm_delete.html'
     success_url = reverse_lazy('academico:aula_list')
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context['aula'] = self.object
         return context

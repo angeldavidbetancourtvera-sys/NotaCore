@@ -7,9 +7,54 @@
 </head>
 <body>
     <h1>{% if form.instance.pk %}Editar plan{% else %}Crear plan{% endif %}</h1>
+    <p>Registre objetivos, métodos de evaluación y ponderación. La suma debe dar exactamente 20 puntos y no puede exceder 6 filas.</p>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        <p><strong>Aula:</strong> {{ form.aula }} {{ form.aula.errors }}</p>
+        <p><strong>Lapso:</strong> {{ form.lapso }} {{ form.lapso.errors }}</p>
+        <p><strong>Activo:</strong> {{ form.activo }} {{ form.activo.errors }}</p>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Objetivo</th>
+                    <th>Método</th>
+                    <th>Ponderación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ form.objetivo_1 }} {{ form.objetivo_1.errors }}</td>
+                    <td>{{ form.metodo_1 }} {{ form.metodo_1.errors }}</td>
+                    <td>{{ form.puntuacion_1 }} {{ form.puntuacion_1.errors }}</td>
+                </tr>
+                <tr>
+                    <td>{{ form.objetivo_2 }} {{ form.objetivo_2.errors }}</td>
+                    <td>{{ form.metodo_2 }} {{ form.metodo_2.errors }}</td>
+                    <td>{{ form.puntuacion_2 }} {{ form.puntuacion_2.errors }}</td>
+                </tr>
+                <tr>
+                    <td>{{ form.objetivo_3 }} {{ form.objetivo_3.errors }}</td>
+                    <td>{{ form.metodo_3 }} {{ form.metodo_3.errors }}</td>
+                    <td>{{ form.puntuacion_3 }} {{ form.puntuacion_3.errors }}</td>
+                </tr>
+                <tr>
+                    <td>{{ form.objetivo_4 }} {{ form.objetivo_4.errors }}</td>
+                    <td>{{ form.metodo_4 }} {{ form.metodo_4.errors }}</td>
+                    <td>{{ form.puntuacion_4 }} {{ form.puntuacion_4.errors }}</td>
+                </tr>
+                <tr>
+                    <td>{{ form.objetivo_5 }} {{ form.objetivo_5.errors }}</td>
+                    <td>{{ form.metodo_5 }} {{ form.metodo_5.errors }}</td>
+                    <td>{{ form.puntuacion_5 }} {{ form.puntuacion_5.errors }}</td>
+                </tr>
+                <tr>
+                    <td>{{ form.objetivo_6 }} {{ form.objetivo_6.errors }}</td>
+                    <td>{{ form.metodo_6 }} {{ form.metodo_6.errors }}</td>
+                    <td>{{ form.puntuacion_6 }} {{ form.puntuacion_6.errors }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>{{ form.non_field_errors }}</p>
         <button type="submit">Guardar</button>
     </form>
 </body>
