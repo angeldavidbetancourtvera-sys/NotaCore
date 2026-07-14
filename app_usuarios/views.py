@@ -6,6 +6,12 @@ from django.shortcuts import redirect, render
 from .decorators import role_required
 from .forms import LoginForm, UsuarioRegistroForm
 
+ROLE_REDIRECTS = {
+    'ADMIN': 'academico:admin_dashboard',
+    'PROFESOR': 'evaluaciones:profesor_dashboard',
+    'ESTUDIANTE': 'evaluaciones:estudiante_dashboard',
+}
+
 
 def home_view(request: HttpRequest) -> HttpResponse:
     """Vista inicial del sistema con acceso a login, registro y paneles principales."""
@@ -59,15 +65,10 @@ def redirect_por_rol(request: HttpRequest) -> HttpResponse:
     """
     Redirige al usuario según su rol después del login.
     """
-    user = request.user
-    if user.rol == 'ADMIN':
-        return redirect('academico:admin_dashboard')
-    elif user.rol == 'PROFESOR':
-        return redirect('evaluaciones:profesor_dashboard')
-    elif user.rol == 'ESTUDIANTE':
-        return redirect('evaluaciones:estudiante_dashboard')
-    else:
-        return redirect('usuarios:dashboard')
+    role_name = str(getattr(request.user, 'rol', '') or '').upper()
+    if role_name in ROLE_REDIRECTS:
+        return redirect(ROLE_REDIRECTS[role_name])
+    return redirect('usuarios:dashboard')
 
 
 @login_required

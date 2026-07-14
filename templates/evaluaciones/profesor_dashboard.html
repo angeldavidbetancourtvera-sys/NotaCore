@@ -6,18 +6,41 @@
     <title>Dashboard del Profesor - NotaCore</title>
 </head>
 <body>
-    <h1>Panel del profesor</h1>
-    <p>Estas son tus aulas, planes y estudiantes asignados.</p>
-    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Panel principal</p>
+            <h1 class="page-title">Bienvenido, profesor</h1>
+            <p class="page-subtitle">Accede a tus aulas, planes y estudiantes asignados.</p>
+        </section>
 
+        <section class="section-panel">
+            <div class="form-footer">
+                <a class="button-secondary" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
+                <a class="button-secondary" href="{% url 'home' %}">Volver al inicio</a>
+            </div>
 
-    <h2>Gestión</h2>
-    <ul>
-        <li><a href="{% url 'evaluaciones:profesor_aulas' %}">Ver aulas</a></li>
-        <li><a href="{% url 'evaluaciones:profesor_estudiantes' %}">Ver estudiantes</a></li>
-        <li><a href="{% url 'evaluaciones:profesor_planes' %}">Ver planes</a></li>
-    </ul>
-
+            <div class="card-grid">
+                <article class="card stat-card">
+                    <strong>Aulas</strong>
+                    <p>{{ aulas_count }} aulas activas</p>
+                    <p>Administra tus aulas activas y revisa su estado.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_aulas' %}">Ir a aulas</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Estudiantes</strong>
+                    <p>{{ estudiantes_count }} estudiantes asignados</p>
+                    <p>Revisa la lista de estudiantes que tienes en tus aulas.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_estudiantes' %}">Ir a estudiantes</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Planes</strong>
+                    <p>{% if planes_por_lapso %}{{ planes_por_lapso|length }} lapso(s) con planes{% else %}Sin planes activos.{% endif %}</p>
+                    <p>Gestiona y crea planes de evaluación para tus aulas.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_planes' %}">Ir a planes</a>
+                </article>
+            </div>
+        </section>
+    </main>
 </body>
 </html>
 

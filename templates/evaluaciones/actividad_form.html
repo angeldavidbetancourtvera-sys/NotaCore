@@ -14,6 +14,7 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Guardar</button>
+        <a href="{% url 'evaluaciones:profesor_planes' %}">Regresar</a>
     </form>
 </body>
 </html>

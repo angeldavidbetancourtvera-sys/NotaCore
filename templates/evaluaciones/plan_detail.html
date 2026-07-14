@@ -6,47 +6,72 @@
     <title>Detalle del plan - NotaCore</title>
 </head>
 <body>
-    <h1>Detalle del plan</h1>
-    <p><strong>Aula:</strong> {{ plan.aula.año_curso }}° Año</p>
-    <p><strong>Lapso:</strong> {{ plan.get_lapso_display }}</p>
-    <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
-    <h2>Objetivos del plan</h2>
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Objetivo</th>
-                <th>Método</th>
-                <th>Ponderación</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
-            <tr>
-                <td>{{ objetivo }}</td>
-                <td>{{ metodo }}</td>
-                <td>{{ puntuacion }}</td>
-                <td>
-                    <a href="{% url 'evaluaciones:profesor_objetivo_evaluar' plan.pk forloop.counter0 %}">Evaluar objetivo</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3">No hay objetivos detallados registrados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Detalle del plan</p>
+            <h1 class="page-title">{{ plan.objetivo }}</h1>
+            <p class="page-subtitle">Aula {{ plan.aula.año_curso }}° Año · Lapso {{ plan.get_lapso_display }}</p>
+        </section>
 
+        <section class="section-panel">
+            <div class="card-grid">
+                <div class="stat-card">
+                    <strong>Aula</strong>
+                    <p>{{ plan.aula.año_curso }}° Año</p>
+                </div>
+                <div class="stat-card">
+                    <strong>Lapso</strong>
+                    <p>{{ plan.get_lapso_display }}</p>
+                </div>
+                <div class="stat-card">
+                    <strong>Puntos máximos</strong>
+                    <p>{{ plan.puntuacion_max }}</p>
+                </div>
+            </div>
 
-    <h2>Actividades</h2>
-    <ul>
-        {% for actividad in actividades %}
-        <li>{{ actividad.titulo }} — {{ actividad.puntuacion }} pts</li>
-        {% empty %}
-        <li>No hay actividades registradas.</li>
-        {% endfor %}
-    </ul>
-    <p><a href="{% url 'evaluaciones:profesor_planes' %}">Volver a planes</a></p>
+            <div class="card">
+                <h2>Objetivos del plan</h2>
+                <table class="table-clean">
+                    <thead>
+                        <tr>
+                            <th>Objetivo</th>
+                            <th>Método</th>
+                            <th>Ponderación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+                        <tr>
+                            <td>{{ objetivo }}</td>
+                            <td>{{ metodo }}</td>
+                            <td>{{ puntuacion }}</td>
+                            <td><a class="link-secondary" href="{% url 'evaluaciones:profesor_objetivo_evaluar' plan.pk forloop.counter0 %}">Evaluar</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No hay objetivos detallados registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Actividades</h2>
+                <ul>
+                    {% for actividad in actividades %}
+                    <li>{{ actividad.titulo }} — {{ actividad.puntuacion }} pts</li>
+                    {% empty %}
+                    <li>No hay actividades registradas.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="form-footer">
+                <a class="button-secondary" href="{% url 'evaluaciones:profesor_planes' %}">Volver a planes</a>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

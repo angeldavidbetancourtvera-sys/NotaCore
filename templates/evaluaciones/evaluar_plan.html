@@ -6,36 +6,47 @@
     <title>Evaluar plan - NotaCore</title>
 </head>
 <body>
-    <h1>Evaluar plan</h1>
-    <p><strong>Aula:</strong> {{ aula.año_curso }}° Año</p>
-    <p><strong>Lapso:</strong> {{ plan.get_lapso_display }}</p>
-    <p><strong>Objetivo:</strong> {{ plan.objetivo }}</p>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Evaluación del plan</p>
+            <h1 class="page-title">Plan: {{ plan.objetivo }}</h1>
+            <p class="page-subtitle">Aula {{ aula.año_curso }}° Año · Lapso {{ plan.get_lapso_display }}</p>
+        </section>
 
-    <form method="post">
-        {% csrf_token %}
-        {% for evaluacion in evaluaciones %}
-        <h2>{{ evaluacion.estudiante.usuario.get_full_name }}</h2>
-        <ul>
-            {% for item in evaluacion.items %}
-            <li>
-                <strong>{{ item.actividad.titulo }}</strong> ({{ item.actividad.puntuacion }} pts)
-                <br>
-                <label>Nota</label>
-                <input type="number" step="0.01" name="nota_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" value="{{ item.nota|default:'' }}">
-                <br>
-                <label>Observación</label>
-                <input type="text" name="observacion_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" value="{{ item.observacion|default:'' }}">
-            </li>
-            {% empty %}
-            <li>No hay actividades en este plan.</li>
-            {% endfor %}
-        </ul>
-        {% empty %}
-        <p>No hay estudiantes matriculados en este aula.</p>
-        {% endfor %}
-        <button type="submit">Guardar notas</button>
-    </form>
+        <section class="section-panel">
+            <form method="post">
+                {% csrf_token %}
+                {% if evaluaciones %}
+                    {% for evaluacion in evaluaciones %}
+                    <article class="card card-compact">
+                        <h2>{{ evaluacion.estudiante.usuario.get_full_name }}</h2>
+                        <div class="card-grid">
+                            {% for item in evaluacion.items %}
+                            <div class="card card-compact">
+                                <p><strong>{{ item.actividad.titulo }}</strong> · {{ item.actividad.puntuacion }} pts</p>
+                                <div class="form-field">
+                                    <label for="nota_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}">Nota</label>
+                                    <input id="nota_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" type="number" step="0.01" name="nota_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" value="{{ item.nota|default:'' }}">
+                                </div>
+                                <div class="form-field">
+                                    <label for="observacion_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}">Observación</label>
+                                    <input id="observacion_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" type="text" name="observacion_{{ evaluacion.estudiante.pk }}_{{ item.actividad.pk }}" value="{{ item.observacion|default:'' }}">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <p>No hay estudiantes matriculados en este aula.</p>
+                {% endif %}
 
-    <p><a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Volver al plan</a></p>
+                <div class="form-footer">
+                    <button type="submit" class="button">Guardar notas</button>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Volver al plan</a>
+                </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>
