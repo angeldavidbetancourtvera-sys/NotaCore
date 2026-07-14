@@ -38,7 +38,7 @@ class AulaListView(LoginRequiredMixin, ListView): # TODO: Cambiar a AdminRequire
     paginate_by = 10
 
     def get_queryset(self) -> QuerySet[AulaVirtual]:
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('profesor__usuario')
         año = self.request.GET.get('año')
         if año:
             queryset = queryset.filter(año_curso=año)
@@ -49,6 +49,9 @@ class AulaDetailView(LoginRequiredMixin, DetailView): # TODO: Cambiar a AdminReq
     model = AulaVirtual
     template_name = 'admin/aula_detail.html'
     context_object_name = 'aula'
+
+    def get_queryset(self) -> QuerySet[AulaVirtual]:
+        return super().get_queryset().select_related('profesor__usuario')
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -137,6 +140,9 @@ class ProfesorListView(LoginRequiredMixin, ListView):
     template_name = 'admin/profesor_list.html'
     context_object_name = 'profesores'
 
+    def get_queryset(self) -> QuerySet[Profesor]:
+        return super().get_queryset().select_related('usuario')
+
 
 class ProfesorDetailView(LoginRequiredMixin, DetailView):
     model = Profesor
@@ -153,6 +159,9 @@ class EstudianteListView(LoginRequiredMixin, ListView):
     model = Estudiante
     template_name = 'admin/estudiante_list.html'
     context_object_name = 'estudiantes'
+
+    def get_queryset(self) -> QuerySet[Estudiante]:
+        return super().get_queryset().select_related('usuario')
 
 
 class EstudianteDetailView(LoginRequiredMixin, DetailView):

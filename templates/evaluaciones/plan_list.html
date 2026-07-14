@@ -6,17 +6,38 @@
     <title>Planes de evaluación</title>
 </head>
 <body>
-    <h1>Planes de evaluación</h1>
-    <p><a href="{% url 'evaluaciones:profesor_plan_nuevo' %}">Crear nuevo plan</a></p>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Planes disponibles</p>
+            <h1 class="page-title">Planes de evaluación</h1>
+            <p class="page-subtitle">Revisa, edita y evalúa tus planes activos.</p>
+        </section>
 
-    <ul>
-        {% for plan in planes %}
-        <li>
-            <strong>{{ plan.aula.año_curso }}° Año</strong> — {{ plan.get_lapso_display }} — {{ plan.objetivo }}
-        </li>
-        {% empty %}
-        <li>No hay planes creados.</li>
-        {% endfor %}
-    </ul>
+        <section class="section-panel">
+            <div class="form-footer">
+                <a class="button" href="{% url 'evaluaciones:profesor_plan_nuevo' %}">Crear nuevo plan</a>
+            </div>
+
+            <div class="card-grid">
+                {% for plan in planes %}
+                <article class="card">
+                    <p><strong>{{ plan.aula.año_curso }}° Año</strong></p>
+                    <p>{{ plan.get_lapso_display }}</p>
+                    <p>{{ plan.objetivo }}</p>
+                    <div class="form-footer">
+                        <a class="button-secondary" href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Ver detalle</a>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="card">
+                    <p>No hay planes creados.</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-footer">
+                <a class="button-secondary" href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al dashboard</a>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

@@ -10,6 +10,7 @@
     <p>Sistema para gestionar aulas, usuarios, planes de evaluación, actividades y calificaciones.</p>
     {% if user.is_authenticated %}
         <p>Sesión activa como <strong>{{ user.get_full_name|default:user.cedula }}</strong> ({{ user.rol }}).</p>
+        <p><a href="{% url 'usuarios:redirect_por_rol' %}">Ir a mi panel</a></p>
         <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
     {% else %}
         <p>Si ya tienes cuenta, inicia sesión. Si no, crea una cuenta y elige tu rol en el formulario.</p>

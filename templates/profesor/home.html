@@ -6,16 +6,42 @@
     <title>Panel profesor</title>
 </head>
 <body>
-    <h1>Bienvenido, {{ user.get_full_name }}</h1>
-    <p>Rol: {{ user.rol }}</p>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Panel del profesor</p>
+            <h1 class="page-title">Bienvenido, {{ user.get_full_name }}</h1>
+            <p class="page-subtitle">Accede a tus aulas, planes y estudiantes asignados.</p>
+        </section>
 
-    <h2>Mis aulas</h2>
-    <ul>
-        {% for aula in user.profesor.aulas.all %}
-        <li>{{ aula.año_curso }}° Año</li>
-        {% empty %}
-        <li>No tienes aulas asignadas.</li>
-        {% endfor %}
-    </ul>
+        <section class="section-panel">
+            <div class="form-footer">
+                <a class="button-secondary" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
+                <a class="button-secondary" href="{% url 'home' %}">Volver al inicio</a>
+            </div>
+
+            <div class="card-grid">
+                <article class="card stat-card">
+                    <strong>Ir al dashboard</strong>
+                    <p>Ver resumen y acceso rápido.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_dashboard' %}">Abrir dashboard</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Aulas</strong>
+                    <p>Administrar tus aulas.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_aulas' %}">Mis aulas</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Planes</strong>
+                    <p>Crear y revisar planes de evaluación.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_planes' %}">Mis planes</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Estudiantes</strong>
+                    <p>Ver los estudiantes asignados.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_estudiantes' %}">Mis estudiantes</a>
+                </article>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

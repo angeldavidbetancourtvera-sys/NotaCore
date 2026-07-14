@@ -6,6 +6,37 @@
     <title>Panel estudiante</title>
 </head>
 <body>
-    <h1>Bienvenido estudiante</h1>
+    <main class="page-shell">
+        <section class="page-header">
+            <p class="page-caption">Panel del estudiante</p>
+            <h1 class="page-title">Bienvenido estudiante</h1>
+            <p class="page-subtitle">Accede a tus aulas, planes y calificaciones.</p>
+        </section>
+
+        <section class="section-panel">
+            <div class="form-footer">
+                <a class="button-secondary" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
+                <a class="button-secondary" href="{% url 'home' %}">Volver al inicio</a>
+            </div>
+
+            <div class="card-grid">
+                <article class="card stat-card">
+                    <strong>Aulas</strong>
+                    <p>Consultar las aulas en las que estás matriculado.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_aulas' %}">Mis aulas</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Planes</strong>
+                    <p>Ver los planes de evaluación activos.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_planes' %}">Mis planes</a>
+                </article>
+                <article class="card stat-card">
+                    <strong>Calificaciones</strong>
+                    <p>Revisar tus calificaciones por aula y actividad.</p>
+                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_calificaciones' %}">Calificaciones</a>
+                </article>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

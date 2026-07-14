@@ -63,9 +63,10 @@ class ProfesorDashboardView(ProfesorRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        aulas = AulaVirtual.objects.filter(profesor__usuario=self.request.user).prefetch_related('matriculas')
+        aulas = AulaVirtual.objects.filter(profesor__usuario=self.request.user)
         context['aulas'] = aulas
-        context['estudiantes_mat'] = Matricula.objects.filter(aula__in=aulas).select_related('estudiante').distinct()
+        context['aulas_count'] = aulas.count()
+        context['estudiantes_count'] = Matricula.objects.filter(aula__in=aulas).values('estudiante').distinct().count()
         context['planes_por_lapso'] = PlanEvaluacion.objects.filter(aula__in=aulas).values('lapso').annotate(total=Count('id')).order_by('lapso')
         return context
 
@@ -349,6 +350,23 @@ class MatrizNotasView(ProfesorRequiredMixin, AulaPropiaMixin, TemplateView):
 class EvaluarPlanView(ProfesorRequiredMixin, TemplateView):
     template_name = 'evaluaciones/evaluar_plan.html'
 
+    def _save_calificacion(self, actividad: Actividad, estudiante: Estudiante, nota_valor: str | None, observacion: str) -> None:
+        if nota_valor in {None, '', 'null'}:
+            return
+        nota = Decimal(str(nota_valor))
+        if nota > actividad.puntuacion:
+            return
+        calificacion, created = Calificacion.objects.get_or_create(
+            actividad=actividad,
+            estudiante=estudiante,
+            defaults={'nota_obtenida': nota, 'observacion': observacion},
+        )
+        if created:
+            return
+        calificacion.nota_obtenida = nota
+        calificacion.observacion = observacion
+        calificacion.save(update_fields=['nota_obtenida', 'observacion'])
+
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         plan = get_object_or_404(PlanEvaluacion, pk=kwargs['pk'], aula__profesor__usuario=self.request.user)
@@ -385,23 +403,12 @@ class EvaluarPlanView(ProfesorRequiredMixin, TemplateView):
             for actividad in Actividad.objects.filter(plan=plan):
                 nota_raw = request.POST.get(f'nota_{estudiante.pk}_{actividad.pk}')
                 observacion = request.POST.get(f'observacion_{estudiante.pk}_{actividad.pk}', '')
-                if nota_raw in {None, '', 'null'}:
-                    continue
-                nota = Decimal(str(nota_raw))
-                if nota > actividad.puntuacion:
-                    continue
-                calificacion, created = Calificacion.objects.get_or_create(
-                    actividad=actividad,
-                    estudiante=estudiante,
-                    defaults={'nota_obtenida': nota, 'observacion': observacion},
-                )
-                if created:
+                existing = Calificacion.objects.filter(actividad=actividad, estudiante=estudiante).first()
+                if existing is None:
                     created_count += 1
                 else:
-                    calificacion.nota_obtenida = nota
-                    calificacion.observacion = observacion
-                    calificacion.save(update_fields=['nota_obtenida', 'observacion'])
                     updated_count += 1
+                self._save_calificacion(actividad, estudiante, nota_raw, observacion)
 
         return redirect('evaluaciones:profesor_plan_detalle', pk=plan.pk)
 
@@ -426,25 +433,12 @@ class GuardarNotasView(ProfesorRequiredMixin, View):
             actividad = get_object_or_404(Actividad, pk=actividad_id, plan__aula__profesor__usuario=request.user)
             estudiante = get_object_or_404(Estudiante, pk=estudiante_id)
 
-            if nota_valor in {None, '', 'null'}:
-                continue
-
-            nota = Decimal(str(nota_valor))
-            if nota > actividad.puntuacion:
-                continue
-
-            calificacion, created = Calificacion.objects.get_or_create(
-                actividad=actividad,
-                estudiante=estudiante,
-                defaults={'nota_obtenida': nota, 'observacion': observacion},
-            )
-            if created:
+            existing = Calificacion.objects.filter(actividad=actividad, estudiante=estudiante).first()
+            if existing is None:
                 created_count += 1
             else:
-                calificacion.nota_obtenida = nota
-                calificacion.observacion = observacion
-                calificacion.save(update_fields=['nota_obtenida', 'observacion'])
                 updated_count += 1
+            self._save_calificacion(actividad, estudiante, nota_valor, observacion)
 
         return JsonResponse({'ok': True, 'created': created_count, 'updated': updated_count})
 

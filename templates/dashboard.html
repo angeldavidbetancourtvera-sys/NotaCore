@@ -9,5 +9,6 @@
     <h1>Bienvenido, {{ user.get_full_name|default:user.username }}</h1>
     <p>Rol: {{ user.rol }}</p>
     <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+    <p><a href="{% url 'home' %}">Volver al inicio</a></p>
 </body>
 </html>
