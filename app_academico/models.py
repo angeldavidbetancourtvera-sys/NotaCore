@@ -46,6 +46,7 @@ class AulaVirtual(models.Model):
     )
 
     año_curso = models.IntegerField(choices=[(i, f'{i}° Año') for i in range(1, 6)])
+    catedra = models.CharField(max_length=200, blank=True, default='')
     lapsos = models.JSONField(default=list)
     profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name='aulas')
     activo = models.BooleanField(default=True)
@@ -53,6 +54,11 @@ class AulaVirtual(models.Model):
 
     def __str__(self) -> str:
         return f"{self.año_curso}° Año - {self.profesor.usuario.get_full_name()}"
+
+    def get_descripcion_corta(self) -> str:
+        if self.catedra:
+            return f"{self.año_curso}° Año - {self.catedra}"
+        return f"{self.año_curso}° Año"
 
     def get_lapsos_display(self) -> str:
         lapsos = self.lapsos

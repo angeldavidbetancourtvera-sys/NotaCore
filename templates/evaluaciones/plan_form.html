@@ -8,6 +8,7 @@
 <body>
     <h1>{% if form.instance.pk %}Editar plan{% else %}Crear plan{% endif %}</h1>
     <p>Registre objetivos, métodos de evaluación y ponderación. La suma debe dar exactamente 20 puntos y no puede exceder 6 filas.</p>
+    <p>Puede iniciar el aula con uno o varios planes de evaluación. Cada aula puede tener un plan por lapso: I, II o III, pero no dos planes para el mismo lapso.</p>
     <form method="post">
         {% csrf_token %}
         <p><strong>Aula:</strong> {{ form.aula }} {{ form.aula.errors }}</p>

@@ -11,7 +11,7 @@
         {% for aula in aulas %}
         <li>
             <a href="{% url 'evaluaciones:profesor_aula_detalle' aula.pk %}">
-                {{ aula.año_curso }}° Año — {{ aula.get_lapsos_display }} — {% if aula.activo %}Activa{% else %}Inactiva{% endif %}
+                {{ aula.año_curso }}° Año{% if aula.catedra %} — {{ aula.catedra }}{% endif %} — {{ aula.get_lapsos_display }} — {% if aula.activo %}Activa{% else %}Inactiva{% endif %}
             </a>
         </li>
         {% empty %}

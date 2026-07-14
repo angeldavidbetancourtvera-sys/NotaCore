@@ -91,6 +91,14 @@ class ProfesorAulaDetailView(ProfesorRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['estudiantes'] = Estudiante.objects.filter(matriculas__aula=self.object).distinct()
         context['planes'] = PlanEvaluacion.objects.filter(aula=self.object).order_by('lapso')
+        context['lapsos_estado'] = []
+        lapsos_ocupados = {plan.lapso for plan in context['planes']}
+        for value, label in PlanEvaluacion._meta.get_field('lapso').choices:
+            context['lapsos_estado'].append({
+                'valor': value,
+                'label': label,
+                'ocupado': value in lapsos_ocupados,
+            })
         return context
 
 
@@ -150,7 +158,7 @@ class EvaluarObjetivoView(ProfesorRequiredMixin, View):
             raise PermissionDenied
         objetivo = objetivos[objetivo_index]
         estudiantes = Estudiante.objects.filter(matriculas__aula=plan.aula).distinct()
-        evaluations = list(EvaluacionObjetivo.objects.filter(plan=plan, objetivo=objetivo[0]).order_by('estudiante__usuario__apellidos', 'estudiante__usuario__nombres'))
+        evaluations = list(EvaluacionObjetivo.objects.filter(plan=plan, objetivo_index=objetivo_index).order_by('estudiante__usuario__apellidos', 'estudiante__usuario__nombres'))
         context = {
             'plan': plan,
             'objetivo': objetivo,
@@ -180,8 +188,13 @@ class EvaluarObjetivoView(ProfesorRequiredMixin, View):
             evaluacion, created = EvaluacionObjetivo.objects.update_or_create(
                 plan=plan,
                 estudiante=estudiante,
-                objetivo=objetivo[0],
-                defaults={'nota_obtenida': nota, 'observacion': request.POST.get(f'observacion_{estudiante.pk}', ''), 'finalizado': False},
+                objetivo_index=objetivo_index,
+                defaults={
+                    'objetivo': objetivo[0],
+                    'nota_obtenida': nota,
+                    'observacion': request.POST.get(f'observacion_{estudiante.pk}', ''),
+                    'finalizado': False,
+                },
             )
         plan.finalizado = bool(request.POST.get('finalizado'))
         plan.save(update_fields=['finalizado'])
@@ -527,19 +540,31 @@ class EstudianteDetalleAulaView(EstudianteRequiredMixin, DetailView):
             evaluaciones_objetivo = EvaluacionObjetivo.objects.filter(estudiante=estudiante, plan__aula=self.object)
             for plan in planes:
                 evaluaciones_por_objetivo = {
-                    evaluacion.objetivo: evaluacion
+                    evaluacion.objetivo_index: evaluacion
                     for evaluacion in evaluaciones_objetivo.filter(plan=plan)
                 }
                 filas = []
-                for objetivo_row in plan.objetivos_detallados or []:
+                puntos_evaluados = Decimal('0.00')
+                puntos_acumulados = Decimal('0.00')
+                for objetivo_index_row, objetivo_row in enumerate(plan.objetivos_detallados or []):
                     objetivo_text = objetivo_row[0] if len(objetivo_row) > 0 else ''
+                    evaluacion = evaluaciones_por_objetivo.get(objetivo_index_row)
+                    if evaluacion is not None:
+                        ponderacion = Decimal(str(objetivo_row[2] if len(objetivo_row) > 2 else 0))
+                        puntos_evaluados += ponderacion
+                        puntos_acumulados += evaluacion.nota_obtenida
                     filas.append({
                         'objetivo': objetivo_text,
                         'metodo': objetivo_row[1] if len(objetivo_row) > 1 else '',
                         'puntuacion': objetivo_row[2] if len(objetivo_row) > 2 else 0,
-                        'evaluacion': evaluaciones_por_objetivo.get(objetivo_text),
+                        'evaluacion': evaluacion,
                     })
-                plan_rows.append({'plan': plan, 'filas': filas})
+                plan_rows.append({
+                    'plan': plan,
+                    'filas': filas,
+                    'puntos_evaluados': puntos_evaluados,
+                    'puntos_acumulados': puntos_acumulados,
+                })
 
         context['planes'] = planes
         context['calificaciones'] = calificaciones
@@ -575,16 +600,16 @@ class EstudiantePlanDetailView(EstudianteRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         estudiante = getattr(self.request.user, 'estudiante', None)
         evaluaciones_objetivo = list(EvaluacionObjetivo.objects.filter(estudiante=estudiante, plan=self.object))
-        evaluaciones_por_objetivo = {evaluacion.objetivo: evaluacion for evaluacion in evaluaciones_objetivo}
+        evaluaciones_por_objetivo = {evaluacion.objetivo_index: evaluacion for evaluacion in evaluaciones_objetivo}
         objetivos_con_evaluaciones = []
 
-        for objetivo_row in self.object.objetivos_detallados or []:
+        for objetivo_index_row, objetivo_row in enumerate(self.object.objetivos_detallados or []):
             objetivo_text = objetivo_row[0] if len(objetivo_row) > 0 else ''
             objetivos_con_evaluaciones.append({
                 'objetivo': objetivo_text,
                 'metodo': objetivo_row[1] if len(objetivo_row) > 1 else '',
                 'puntuacion': objetivo_row[2] if len(objetivo_row) > 2 else 0,
-                'evaluacion': evaluaciones_por_objetivo.get(objetivo_text),
+                'evaluacion': evaluaciones_por_objetivo.get(objetivo_index_row),
             })
 
         context['actividades'] = Actividad.objects.filter(plan=self.object).order_by('fecha')

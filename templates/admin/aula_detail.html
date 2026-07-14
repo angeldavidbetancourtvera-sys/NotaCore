@@ -8,6 +8,7 @@
 <body>
     <h1>Detalle del aula</h1>
     <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
+    <p><strong>Cátedra:</strong> {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}</p>
     <p><strong>Profesor responsable:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
     <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
     <p><strong>Estado:</strong> {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</p>

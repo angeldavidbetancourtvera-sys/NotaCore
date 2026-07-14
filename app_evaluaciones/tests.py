@@ -46,6 +46,31 @@ class EvaluacionFormsTestCase(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('puntuacion_max', form.errors)
 
+    def test_plan_form_allows_second_plan_when_each_plan_sums_20_points(self) -> None:
+        PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Plan inicial',
+            metodo='Prueba',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Objetivo 1', 'Método 1', 20.0]],
+        )
+
+        form = PlanEvaluacionForm(
+            data={
+                'aula': self.aula.pk,
+                'lapso': 'II',
+                'objetivo_1': 'Objetivo nuevo',
+                'metodo_1': 'Método nuevo',
+                'puntuacion_1': '20.00',
+                'activo': 'on',
+            },
+            user=self.profesor_user,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
     def test_actividad_form_rejects_score_higher_than_plan_limit(self) -> None:
         plan = PlanEvaluacion.objects.create(
             aula=self.aula,
@@ -93,6 +118,71 @@ class EvaluacionFormsTestCase(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['puntuacion_max'], 20)
 
+    def test_plan_form_allows_one_plan_per_different_lapso_in_same_aula(self) -> None:
+        form_i = PlanEvaluacionForm(
+            data={
+                'aula': self.aula.pk,
+                'lapso': 'I',
+                'objetivo_1': 'Objetivo I',
+                'metodo_1': 'Método I',
+                'puntuacion_1': '20.00',
+                'activo': 'on',
+            },
+            user=self.profesor_user,
+        )
+        form_ii = PlanEvaluacionForm(
+            data={
+                'aula': self.aula.pk,
+                'lapso': 'II',
+                'objetivo_1': 'Objetivo II',
+                'metodo_1': 'Método II',
+                'puntuacion_1': '20.00',
+                'activo': 'on',
+            },
+            user=self.profesor_user,
+        )
+        form_iii = PlanEvaluacionForm(
+            data={
+                'aula': self.aula.pk,
+                'lapso': 'III',
+                'objetivo_1': 'Objetivo III',
+                'metodo_1': 'Método III',
+                'puntuacion_1': '20.00',
+                'activo': 'on',
+            },
+            user=self.profesor_user,
+        )
+
+        self.assertTrue(form_i.is_valid(), form_i.errors)
+        self.assertTrue(form_ii.is_valid(), form_ii.errors)
+        self.assertTrue(form_iii.is_valid(), form_iii.errors)
+
+    def test_plan_form_rejects_second_plan_for_same_lapso_in_same_aula(self) -> None:
+        PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Plan inicial',
+            metodo='Prueba',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Objetivo inicial', 'Método', 20.0]],
+        )
+
+        form = PlanEvaluacionForm(
+            data={
+                'aula': self.aula.pk,
+                'lapso': 'I',
+                'objetivo_1': 'Otro objetivo',
+                'metodo_1': 'Otro método',
+                'puntuacion_1': '20.00',
+                'activo': 'on',
+            },
+            user=self.profesor_user,
+        )
+
+        self.assertFalse(form.is_valid(), form.errors)
+        self.assertIn('lapso', form.errors)
+
     def test_plan_form_saves_rows_as_json_without_decimal_errors(self) -> None:
         form = PlanEvaluacionForm(
             data={
@@ -115,6 +205,58 @@ class EvaluacionFormsTestCase(TestCase):
         self.assertEqual(len(plan.objetivos_detallados), 2)
         self.assertEqual(plan.objetivos_detallados[0][0], 'Comprender la fotosíntesis')
         self.assertEqual(plan.objetivos_detallados[1][2], 12.0)
+
+    def test_evaluations_are_stored_per_objective_row(self) -> None:
+        student_user = Usuario.objects.create_user(
+            cedula='E700',
+            email='est700@example.com',
+            password='12345678',
+            nombres='María',
+            apellidos='Pérez',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Luis',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Plan de evaluación',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[
+                ['Participación', 'Clase', 10.0],
+                ['Participación', 'Taller', 10.0],
+            ],
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.post(
+            reverse('evaluaciones:profesor_objetivo_evaluar', kwargs={'pk': plan.pk, 'objetivo_index': 0}),
+            {
+                f'nota_{student.pk}': '4.00',
+                f'observacion_{student.pk}': 'Bien',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(
+            reverse('evaluaciones:profesor_objetivo_evaluar', kwargs={'pk': plan.pk, 'objetivo_index': 1}),
+            {
+                f'nota_{student.pk}': '6.00',
+                f'observacion_{student.pk}': 'Muy bien',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        evaluations = EvaluacionObjetivo.objects.filter(plan=plan, estudiante=student).order_by('objetivo_index')
+        self.assertEqual(evaluations.count(), 2)
+        self.assertEqual(evaluations[0].nota_obtenida, Decimal('4.00'))
+        self.assertEqual(evaluations[1].nota_obtenida, Decimal('6.00'))
 
     def test_profesor_aula_detail_shows_plan_table(self) -> None:
         self.client.force_login(self.profesor_user)
@@ -173,6 +315,47 @@ class EvaluacionFormsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Comprender la fotosíntesis')
         self.assertContains(response, 'Resolver ejercicios')
+
+    def test_student_aula_detail_shows_evaluated_and_accumulated_points_summary(self) -> None:
+        student_user = Usuario.objects.create_user(
+            cedula='E450',
+            email='est450@example.com',
+            password='12345678',
+            nombres='Lucía',
+            apellidos='Silva',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='José',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Objetivo general',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[
+                ['Comprender la fotosíntesis', 'Exposición', 8.0],
+                ['Resolver ejercicios', 'Taller', 4.0],
+            ],
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Comprender la fotosíntesis',
+            nota_obtenida=Decimal('7.00'),
+            observacion='Bien',
+        )
+
+        self.client.force_login(student_user)
+        response = self.client.get(reverse('evaluaciones:estudiante_aula_detalle', args=[self.aula.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '8.00/7.00')
 
     def test_professor_can_evaluate_objective_and_save_student_grade(self) -> None:
         student_user = Usuario.objects.create_user(

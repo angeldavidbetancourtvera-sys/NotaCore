@@ -85,9 +85,13 @@ class PlanEvaluacionForm(forms.ModelForm):
             self.add_error('puntuacion_max', 'La suma de las ponderaciones debe dar exactamente 20 puntos.')
 
         if aula is not None:
-            existing_total = PlanEvaluacion.objects.filter(aula=aula).exclude(pk=self.instance.pk).aggregate(total=models.Sum('puntuacion_max'))['total'] or Decimal('0.00')
-            if Decimal(str(existing_total)) + total > Decimal('20.00'):
-                self.add_error('aula', 'La suma de los planes del aula no puede exceder 20 puntos.')
+            lapso = cleaned_data.get('lapso')
+            existing_lapso = PlanEvaluacion.objects.filter(aula=aula, lapso=lapso).exclude(pk=self.instance.pk).exists()
+            if existing_lapso:
+                self.add_error('lapso', 'Ya existe un plan de evaluación para este lapso en el aula seleccionada.')
+
+            if total > Decimal('20.00'):
+                self.add_error('puntuacion_max', 'La suma de las ponderaciones debe dar exactamente 20 puntos.')
 
         cleaned_data['puntuacion_max'] = total
         return cleaned_data

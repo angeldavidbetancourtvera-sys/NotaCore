@@ -35,7 +35,7 @@
         <tbody>
             {% for item in objetivos_con_evaluaciones %}
             <tr>
-                <td>{{ item.objetivo }}</td>
+                <td><strong>Objetivo {{ forloop.counter }}:</strong> {{ item.objetivo }}</td>
                 <td>{{ item.puntuacion|stringformat:".2f" }}</td>
                 <td>
                     {% if item.evaluacion %}

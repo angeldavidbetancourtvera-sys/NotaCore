@@ -13,6 +13,7 @@
         <thead>
             <tr>
                 <th>Aula</th>
+                <th>Cátedra</th>
                 <th>Profesor</th>
                 <th>Lapsos</th>
                 <th>Estado</th>
@@ -22,13 +23,14 @@
             {% for aula in aulas %}
             <tr>
                 <td><a href="{% url 'academico:aula_detail' aula.pk %}">{{ aula.año_curso }}° Año</a></td>
+                <td>{% if aula.catedra %}{{ aula.catedra }}{% else %}—{% endif %}</td>
                 <td>{{ aula.profesor.usuario.get_full_name }}</td>
                 <td>{{ aula.get_lapsos_display }}</td>
                 <td>{% if aula.activo %}Activa{% else %}Inactiva{% endif %}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">No hay aulas registradas.</td>
+                <td colspan="5">No hay aulas registradas.</td>
             </tr>
             {% endfor %}
         </tbody>

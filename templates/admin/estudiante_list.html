@@ -7,16 +7,38 @@
 </head>
 <body>
     <h1>Estudiantes</h1>
+
+    <form method="get">
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por cédula, nombre o apellido">
+        <button type="submit">Buscar</button>
+        {% if q %}
+        <a href="{% url 'academico:estudiante_list' %}">Limpiar</a>
+        {% endif %}
+    </form>
+
     <ul>
         {% for estudiante in estudiantes %}
         <li>
             <a href="{% url 'academico:estudiante_detail' estudiante.pk %}">{{ estudiante.usuario.get_full_name }}</a>
-            <span>— {{ estudiante.usuario.email }}</span>
+            <span>— {{ estudiante.usuario.cedula }} — {{ estudiante.usuario.email }}</span>
         </li>
         {% empty %}
         <li>No hay estudiantes registrados.</li>
         {% endfor %}
     </ul>
+
+    {% if is_paginated %}
+        <div>
+            {% if page_obj.has_previous %}
+                <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+            {% endif %}
+            <span>Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?q={{ q }}&page={{ page_obj.next_page_number }}">Siguiente</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <p><a href="{% url 'academico:admin_dashboard' %}">Volver al panel</a></p>
 </body>
 </html>

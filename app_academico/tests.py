@@ -21,6 +21,62 @@ class AcademicoRoutesTest(TestCase):
         self.assertEqual(reverse('academico:profesor_list'), '/academico/profesores/')
         self.assertEqual(reverse('academico:estudiante_list'), '/academico/estudiantes/')
 
+    def test_admin_estudiante_list_renders_for_existing_students(self) -> None:
+        admin_user = Usuario.objects.create_user(
+            cedula='A004',
+            email='admin4@example.com',
+            password='12345678',
+            nombres='Admin',
+            apellidos='Test',
+            rol='ADMIN',
+        )
+        student_user = Usuario.objects.create_user(
+            cedula='E400',
+            email='estudiante400@example.com',
+            password='12345678',
+            nombres='Carlos',
+            apellidos='Pérez',
+            rol='ESTUDIANTE',
+        )
+        Estudiante.objects.create(usuario=student_user, representante='R', telefono_representante='123')
+
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse('academico:estudiante_list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Carlos Pérez')
+
+    def test_admin_can_update_student_contact_fields(self) -> None:
+        admin_user = Usuario.objects.create_user(
+            cedula='A005',
+            email='admin5@example.com',
+            password='12345678',
+            nombres='Admin',
+            apellidos='Test',
+            rol='ADMIN',
+        )
+        student_user = Usuario.objects.create_user(
+            cedula='E500',
+            email='estudiante500@example.com',
+            password='12345678',
+            nombres='Pedro',
+            apellidos='López',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(usuario=student_user, representante='', telefono_representante='')
+
+        self.client.force_login(admin_user)
+        response = self.client.post(
+            reverse('academico:estudiante_detail', args=[student_user.cedula]),
+            {'representante': 'María López', 'telefono_representante': '04141234567'},
+            follow=False,
+        )
+
+        student.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(student.representante, 'María López')
+        self.assertEqual(student.telefono_representante, '04141234567')
+
     def test_admin_aula_create_view_renders_form(self) -> None:
         user = Usuario.objects.create_user(
             cedula='A001',

@@ -14,7 +14,7 @@
     <ul>
         {% for aula in aulas %}
         <li>
-            <strong>{{ aula.año_curso }}° Año</strong> — Profesor: {{ aula.profesor.usuario.get_full_name }}
+            <strong>{% if aula.catedra %}{{ aula.año_curso }}° Año — {{ aula.catedra }}{% else %}{{ aula.año_curso }}° Año{% endif %}</strong> — Profesor: {{ aula.profesor.usuario.get_full_name }}
             <br>
             <span>Lapsos: {{ aula.get_lapsos_display }}</span>
             <br>

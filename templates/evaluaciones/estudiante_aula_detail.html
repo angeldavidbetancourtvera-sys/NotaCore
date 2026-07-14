@@ -8,6 +8,7 @@
 <body>
     <h1>Detalle del aula</h1>
     <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
+    <p><strong>Cátedra:</strong> {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}</p>
     <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
     <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
 
@@ -32,7 +33,7 @@
                         {% if row.plan.pk == plan.pk %}
                             {% for fila in row.filas %}
                             <tr>
-                                <td>{{ fila.objetivo }}</td>
+                                <td><strong>Objetivo {{ forloop.counter }}:</strong> {{ fila.objetivo }}</td>
                                 <td>{{ fila.metodo }}</td>
                                 <td>{{ fila.puntuacion|stringformat:".2f" }}</td>
                                 <td>
@@ -48,6 +49,11 @@
                                 <td colspan="4">No hay objetivos detallados registrados para este plan.</td>
                             </tr>
                             {% endfor %}
+                            <tr>
+                                <td colspan="4">
+                                    <strong>Resumen:</strong> {{ row.puntos_evaluados|stringformat:".2f" }}/{{ row.puntos_acumulados|stringformat:".2f" }}
+                                </td>
+                            </tr>
                         {% endif %}
                     {% endfor %}
                 </tbody>

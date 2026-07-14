@@ -22,9 +22,10 @@ class AulaVirtualForm(forms.ModelForm):
 
     class Meta:
         model = AulaVirtual
-        fields = ['año_curso', 'lapsos', 'activo']
+        fields = ['año_curso', 'catedra', 'lapsos', 'activo']
         widgets = {
             'año_curso': forms.Select(attrs={'class': 'form-select'}),
+            'catedra': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Matemáticas'}),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

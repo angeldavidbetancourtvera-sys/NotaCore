@@ -153,9 +153,36 @@ class EstudianteListView(LoginRequiredMixin, ListView):
     model = Estudiante
     template_name = 'admin/estudiante_list.html'
     context_object_name = 'estudiantes'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related('usuario').order_by('usuario__apellidos', 'usuario__nombres', 'usuario__cedula')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            queryset = queryset.filter(
+                Q(usuario__cedula__icontains=q) |
+                Q(usuario__nombres__icontains=q) |
+                Q(usuario__apellidos__icontains=q)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['q'] = self.request.GET.get('q', '')
+        return context
 
 
 class EstudianteDetailView(LoginRequiredMixin, DetailView):
     model = Estudiante
     template_name = 'admin/estudiante_detail.html'
     context_object_name = 'estudiante'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        representante = request.POST.get('representante', '').strip()
+        telefono_representante = request.POST.get('telefono_representante', '').strip()
+
+        self.object.representante = representante
+        self.object.telefono_representante = telefono_representante
+        self.object.save(update_fields=['representante', 'telefono_representante'])
+        return redirect('academico:estudiante_list')
