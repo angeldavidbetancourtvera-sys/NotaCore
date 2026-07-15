@@ -18,9 +18,19 @@ class PlanEvaluacion(models.Model):
     activo = models.BooleanField(default=True)
     aprobado_por_admin = models.BooleanField(default=False)
     finalizado = models.BooleanField(default=False)
+    notas_enviadas_al_admin = models.BooleanField(default=False)
+    publicado_para_estudiantes = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.aula} - {self.get_lapso_display()} - {self.objetivo[:30]}"
+
+    def is_visible_to_students(self) -> bool:
+        return (
+            self.publicado_para_estudiantes
+            or self.aprobado_por_admin
+            or self.finalizado
+            or not self.aula.activo
+        )
 
     class Meta:
         db_table = 'planes_evaluacion'

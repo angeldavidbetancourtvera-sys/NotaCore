@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 
 from app_evaluaciones.models import PlanEvaluacion
+from app_evaluaciones.views import AdminRequiredMixin
 
 # TODO: Cuando P1 termine, descomenta la siguiente línea y borra LoginRequiredMixin
 # from app_usuarios.permisos import AdminRequiredMixin
@@ -45,7 +46,7 @@ class AulaListView(LoginRequiredMixin, ListView): # TODO: Cambiar a AdminRequire
         return queryset
 
 
-class AulaDetailView(LoginRequiredMixin, DetailView): # TODO: Cambiar a AdminRequiredMixin
+class AulaDetailView(AdminRequiredMixin, DetailView):
     model = AulaVirtual
     template_name = 'admin/aula_detail.html'
     context_object_name = 'aula'
@@ -55,10 +56,19 @@ class AulaDetailView(LoginRequiredMixin, DetailView): # TODO: Cambiar a AdminReq
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        cerrar_aula = request.POST.get('cerrar_aula') == '1'
+
         for plan in self.object.planes.all():
-            approved = f'aprobado_{plan.pk}' in request.POST
+            approved = f'aprobado_{plan.pk}' in request.POST or cerrar_aula
             plan.aprobado_por_admin = approved
-            plan.save(update_fields=['aprobado_por_admin'])
+            if cerrar_aula:
+                plan.publicado_para_estudiantes = True
+            plan.save(update_fields=['aprobado_por_admin', 'publicado_para_estudiantes'])
+
+        if cerrar_aula:
+            self.object.activo = False
+            self.object.save(update_fields=['activo'])
+
         return redirect('academico:aula_list')
 
 

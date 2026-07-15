@@ -62,11 +62,12 @@
                 </tbody>
             </table>
             <p><button type="submit">Guardar aprobación</button></p>
+            <p><label><input type="checkbox" name="cerrar_aula" value="1"> Cerrar aula virtual y publicar notas definitivas para estudiantes</label></p>
         </form>
     {% else %}
         <p>No hay planes de evaluación para este aula.</p>
     {% endif %}
 
-    <p><a href="{% url 'academico:aula_update' aula.pk %}">Editar</a> | <a href="{% url 'academico:aula_list' %}">Volver a la lista</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
+    <p><a href="{% url 'academico:aula_update' aula.pk %}">Editar</a> | <a href="{% url 'academico:aula_delete' aula.pk %}">Eliminar</a> | <a href="{% url 'academico:aula_list' %}">Volver a la lista</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
 </body>
 </html>

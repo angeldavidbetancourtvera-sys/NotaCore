@@ -4,7 +4,7 @@ from typing import Any
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -14,6 +14,22 @@ from app_academico.models import AulaVirtual, Estudiante, Matricula, Profesor
 
 from .forms import ActividadForm, AsignarEstudianteForm, CalificacionForm, PlanEvaluacionForm
 from .models import Actividad, Calificacion, EvaluacionObjetivo, PlanEvaluacion
+
+
+def is_plan_visible_for_student(plan: PlanEvaluacion, estudiante: Estudiante | None) -> bool:
+    if estudiante is None:
+        return False
+
+    is_enrolled_in_aula = Matricula.objects.filter(estudiante=estudiante, aula=plan.aula).exists()
+    if is_enrolled_in_aula:
+        return True
+
+    if plan.publicado_para_estudiantes or plan.aprobado_por_admin or plan.finalizado or not plan.aula.activo:
+        return True
+
+    has_objective_evaluations = EvaluacionObjetivo.objects.filter(plan=plan, estudiante=estudiante).exists()
+    has_activity_califications = Calificacion.objects.filter(actividad__plan=plan, estudiante=estudiante).exists()
+    return has_objective_evaluations or has_activity_califications
 
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -92,6 +108,12 @@ class ProfesorAulaDetailView(ProfesorRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['estudiantes'] = Estudiante.objects.filter(matriculas__aula=self.object).distinct()
         context['planes'] = PlanEvaluacion.objects.filter(aula=self.object).order_by('lapso')
+        context['puede_enviar_notas'] = any(
+            plan.finalizado
+            or EvaluacionObjetivo.objects.filter(plan=plan).exists()
+            or Calificacion.objects.filter(actividad__plan=plan).exists()
+            for plan in context['planes']
+        )
         context['lapsos_estado'] = []
         lapsos_ocupados = {plan.lapso for plan in context['planes']}
         for value, label in PlanEvaluacion._meta.get_field('lapso').choices:
@@ -198,7 +220,9 @@ class EvaluarObjetivoView(ProfesorRequiredMixin, View):
                 },
             )
         plan.finalizado = bool(request.POST.get('finalizado'))
-        plan.save(update_fields=['finalizado'])
+        plan.publicado_para_estudiantes = plan.publicado_para_estudiantes or plan.finalizado
+        plan.notas_enviadas_al_admin = plan.notas_enviadas_al_admin or plan.finalizado
+        plan.save(update_fields=['finalizado', 'publicado_para_estudiantes', 'notas_enviadas_al_admin'])
         return redirect('evaluaciones:profesor_plan_detalle', pk=plan.pk)
 
 
@@ -469,6 +493,16 @@ class GuardarNotasView(ProfesorRequiredMixin, View):
         return []
 
 
+class EnviarNotasAdminView(ProfesorRequiredMixin, View):
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        aula = get_object_or_404(AulaVirtual, pk=kwargs['pk_aula'], profesor__usuario=request.user)
+        planes = PlanEvaluacion.objects.filter(aula=aula)
+        for plan in planes:
+            plan.notas_enviadas_al_admin = True
+            plan.save(update_fields=['notas_enviadas_al_admin'])
+        return redirect('evaluaciones:profesor_aula_detalle', pk=aula.pk)
+
+
 class EstudianteDashboardView(EstudianteRequiredMixin, TemplateView):
     template_name = 'evaluaciones/estudiante_dashboard.html'
 
@@ -529,7 +563,10 @@ class EstudianteDetalleAulaView(EstudianteRequiredMixin, DetailView):
         plan_rows: list[dict[str, Any]] = []
 
         if estudiante is not None and self.object is not None:
-            planes = PlanEvaluacion.objects.filter(aula=self.object, activo=True).order_by('lapso')
+            planes = PlanEvaluacion.objects.filter(
+                aula=self.object,
+            ).order_by('lapso')
+            planes = [plan for plan in planes if is_plan_visible_for_student(plan, estudiante)]
             calificaciones = Calificacion.objects.filter(estudiante=estudiante, actividad__plan__aula=self.object).select_related('actividad', 'actividad__plan')
             evaluaciones_objetivo = EvaluacionObjetivo.objects.filter(estudiante=estudiante, plan__aula=self.object)
             for plan in planes:
@@ -576,7 +613,8 @@ class EstudiantePlanesView(EstudianteRequiredMixin, ListView):
         estudiante = getattr(self.request.user, 'estudiante', None)
         if estudiante is None:
             return PlanEvaluacion.objects.none()
-        return PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante, activo=True).select_related('aula').order_by('aula__año_curso', 'lapso')
+        plans = PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante).select_related('aula').order_by('aula__año_curso', 'lapso')
+        return [plan for plan in plans if is_plan_visible_for_student(plan, estudiante)]
 
 
 class EstudiantePlanDetailView(EstudianteRequiredMixin, DetailView):
@@ -588,11 +626,17 @@ class EstudiantePlanDetailView(EstudianteRequiredMixin, DetailView):
         estudiante = getattr(self.request.user, 'estudiante', None)
         if estudiante is None:
             return PlanEvaluacion.objects.none()
-        return PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante, activo=True)
+        return PlanEvaluacion.objects.filter(aula__matriculas__estudiante=estudiante)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         estudiante = getattr(self.request.user, 'estudiante', None)
+        if self.object is None or not is_plan_visible_for_student(self.object, estudiante):
+            context['actividades'] = []
+            context['calificaciones'] = []
+            context['evaluaciones_objetivo'] = []
+            context['objetivos_con_evaluaciones'] = []
+            return context
         evaluaciones_objetivo = list(EvaluacionObjetivo.objects.filter(estudiante=estudiante, plan=self.object))
         evaluaciones_por_objetivo = {evaluacion.objetivo_index: evaluacion for evaluacion in evaluaciones_objetivo}
         objetivos_con_evaluaciones = []
@@ -626,23 +670,54 @@ class EstudiantePreviewCalificacionesView(EstudianteRequiredMixin, TemplateView)
             matriculas = Matricula.objects.filter(estudiante=estudiante).select_related('aula')
 
             for matricula in matriculas:
-                planes = PlanEvaluacion.objects.filter(aula=matricula.aula, activo=True).order_by('lapso')
+                planes = PlanEvaluacion.objects.filter(
+                    aula=matricula.aula,
+                ).order_by('lapso')
+                planes = [plan for plan in planes if is_plan_visible_for_student(plan, estudiante)]
                 for plan in planes:
                     actividades = Actividad.objects.filter(plan=plan).order_by('fecha')
                     puntos_acumulados = Decimal('0.00')
                     puntos_posibles = Decimal('0.00')
                     detalle: list[dict[str, Any]] = []
+
                     for actividad in actividades:
                         puntos_posibles += actividad.puntuacion
                         calificacion = Calificacion.objects.filter(actividad=actividad, estudiante=estudiante).first()
                         if calificacion:
                             puntos_acumulados += calificacion.nota_obtenida
                         detalle.append({
+                            'tipo': 'actividad',
+                            'titulo': actividad.titulo,
                             'actividad': actividad,
                             'calificacion': calificacion,
                             'nota_obtenida': calificacion.nota_obtenida if calificacion else None,
                             'observacion': calificacion.observacion if calificacion else '',
+                            'ponderacion': actividad.puntuacion,
                         })
+
+                    evaluaciones_objetivo = EvaluacionObjetivo.objects.filter(plan=plan, estudiante=estudiante).order_by('objetivo_index')
+                    objetivos_detallados = plan.objetivos_detallados or []
+                    for objetivo_index, objetivo_row in enumerate(objetivos_detallados):
+                        objetivo_text = objetivo_row[0] if len(objetivo_row) > 0 else ''
+                        evaluacion = evaluaciones_objetivo.filter(objetivo_index=objetivo_index).first()
+                        detalle.append({
+                            'tipo': 'objetivo',
+                            'titulo': objetivo_text or f'Objetivo {objetivo_index + 1}',
+                            'objetivo': objetivo_text,
+                            'calificacion': evaluacion,
+                            'nota_obtenida': evaluacion.nota_obtenida if evaluacion else None,
+                            'observacion': evaluacion.observacion if evaluacion else '',
+                            'ponderacion': objetivo_row[2] if len(objetivo_row) > 2 else None,
+                        })
+
+                    if not detalle and not actividades:
+                        detalle.append({
+                            'tipo': 'info',
+                            'titulo': 'Sin registros aún',
+                            'nota_obtenida': None,
+                            'observacion': 'Aún no hay calificaciones ni actividades disponibles para este plan.',
+                        })
+
                     promedio = (puntos_acumulados / puntos_posibles * Decimal('20')) if puntos_posibles else Decimal('0.00')
                     resumen.append({
                         'aula': matricula.aula,
