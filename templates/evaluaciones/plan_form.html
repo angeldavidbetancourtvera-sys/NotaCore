@@ -11,6 +11,9 @@
     <p>Puede iniciar el aula con uno o varios planes de evaluación. Cada aula puede tener un plan por lapso: I, II o III, pero no dos planes para el mismo lapso.</p>
     <form method="post">
         {% csrf_token %}
+        {% if aula_context %}
+            <p><strong>Aula actual:</strong> {{ aula_context.año_curso }}° Año — {{ aula_context.catedra|default:'Sin cátedra' }} — {{ aula_context.profesor.usuario.get_full_name }}</p>
+        {% endif %}
         <p><strong>Aula:</strong> {{ form.aula }} {{ form.aula.errors }}</p>
         <p><strong>Lapso:</strong> {{ form.lapso }} {{ form.lapso.errors }}</p>
         <p><strong>Activo:</strong> {{ form.activo }} {{ form.activo.errors }}</p>

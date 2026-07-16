@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 
-from app_evaluaciones.models import PlanEvaluacion
+from app_evaluaciones.models import NotaPublicada, PlanEvaluacion
 from app_evaluaciones.views import AdminRequiredMixin
 
 # TODO: Cuando P1 termine, descomenta la siguiente línea y borra LoginRequiredMixin
@@ -54,9 +54,31 @@ class AulaDetailView(AdminRequiredMixin, DetailView):
     def get_queryset(self) -> QuerySet[AulaVirtual]:
         return super().get_queryset().select_related('profesor__usuario')
 
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['planes_con_reporte'] = self.object.planes.order_by('lapso').filter(notas_enviadas_al_admin=True)
+        return context
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        publicar_plan_pk = request.POST.get('publicar_notas_plan')
         cerrar_aula = request.POST.get('cerrar_aula') == '1'
+
+        if publicar_plan_pk:
+            plan = self.object.planes.filter(pk=publicar_plan_pk).first()
+            if plan and plan.notas_enviadas_al_admin:
+                estudiantes = Estudiante.objects.filter(matriculas__aula=self.object).distinct()
+                for estudiante in estudiantes:
+                    nota_final = plan.calcular_nota_final(estudiante)
+                    NotaPublicada.objects.update_or_create(
+                        plan=plan,
+                        estudiante=estudiante,
+                        defaults={'nota_final': nota_final},
+                    )
+                plan.aprobado_por_admin = True
+                plan.publicado_para_estudiantes = True
+                plan.save(update_fields=['aprobado_por_admin', 'publicado_para_estudiantes'])
+            return redirect('academico:aula_detail', pk=self.object.pk)
 
         for plan in self.object.planes.all():
             approved = f'aprobado_{plan.pk}' in request.POST or cerrar_aula
@@ -91,8 +113,8 @@ class AulaUpdateView(LoginRequiredMixin, UpdateView): # TODO: Cambiar a AdminReq
 
     def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
-        if self.object.lapsos:
-            initial['lapsos'] = self.object.lapsos
+        if self.object.ciclo_escolar:
+            initial['ciclo_escolar'] = self.object.ciclo_escolar
         return initial
 
 

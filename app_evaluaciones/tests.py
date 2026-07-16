@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from app_academico.models import AulaVirtual, Estudiante, Matricula, Profesor
 from app_evaluaciones.forms import ActividadForm, AsignarEstudianteForm, PlanEvaluacionForm
-from app_evaluaciones.models import EvaluacionObjetivo, PlanEvaluacion
+from app_evaluaciones.models import EvaluacionObjetivo, NotaPublicada, PlanEvaluacion
 from app_usuarios.models import Usuario
 
 
@@ -398,8 +398,9 @@ class EvaluacionFormsTestCase(TestCase):
         response = self.client.get(reverse('evaluaciones:estudiante_calificaciones'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Comprender la fotosíntesis')
+        self.assertContains(response, 'Profesor responsable:')
         self.assertContains(response, '7.00')
+        self.assertNotContains(response, 'Objetivo:')
 
     def test_student_aula_detail_shows_evaluated_and_accumulated_points_summary(self) -> None:
         student_user = Usuario.objects.create_user(
@@ -483,6 +484,48 @@ class EvaluacionFormsTestCase(TestCase):
         plan.refresh_from_db()
         self.assertTrue(plan.finalizado)
 
+    def test_professor_can_reopen_objective_evaluation_and_see_existing_score(self) -> None:
+        student_user = Usuario.objects.create_user(
+            cedula='E410',
+            email='est410@example.com',
+            password='12345678',
+            nombres='Marta',
+            apellidos='Lopez',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Rosa',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Objetivo general',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[
+                ['Comprender la fotosíntesis', 'Exposición', 4.0],
+            ],
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Comprender la fotosíntesis',
+            objetivo_index=0,
+            nota_obtenida=Decimal('3.50'),
+            observacion='Bien',
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_objetivo_evaluar', args=[plan.pk, 0]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="3.50"')
+        self.assertContains(response, 'value="Bien"')
+
     def test_student_plan_detail_shows_objective_grade(self) -> None:
         student_user = Usuario.objects.create_user(
             cedula='E500',
@@ -546,6 +589,314 @@ class EvaluacionFormsTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         plan.refresh_from_db()
         self.assertTrue(plan.notas_enviadas_al_admin)
+
+    def test_profesor_cannot_evaluate_objectives_after_sending_notes_to_admin(self) -> None:
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Objetivo general',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            notas_enviadas_al_admin=True,
+            objetivos_detallados=[['Comprender la fotosíntesis', 'Exposición', 20.0]],
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_objetivo_evaluar', args=[plan.pk, 0]))
+
+        self.assertRedirects(response, reverse('evaluaciones:profesor_reporte_notas', args=[plan.pk]))
+
+    def test_profesor_aula_detail_shows_report_link_when_notes_are_already_sent(self) -> None:
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Objetivo general',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            notas_enviadas_al_admin=True,
+            objetivos_detallados=[['Comprender la fotosíntesis', 'Exposición', 20.0]],
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_aula_detalle', args=[self.aula.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Reporte enviado')
+        self.assertContains(response, reverse('evaluaciones:profesor_reporte_notas', args=[plan.pk]))
+        self.assertNotContains(response, 'Enviar notas al admin')
+
+    def test_profesor_create_plan_from_aula_prefills_aula_and_hides_selection(self) -> None:
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_plan_nuevo'), {'aula': self.aula.pk})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Aula actual')
+        self.assertContains(response, '2° Año')
+        self.assertNotContains(response, 'Seleccione un aula')
+
+    def test_profesor_plan_form_excludes_used_lapso_from_available_choices(self) -> None:
+        PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Plan inicial',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Objetivo 1', 'Método 1', 20.0]],
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_plan_nuevo'), {'aula': self.aula.pk})
+
+        self.assertEqual(response.status_code, 200)
+        choices = dict(response.context['form'].fields['lapso'].choices)
+        self.assertNotIn('I', choices)
+        self.assertIn('II', choices)
+        self.assertIn('III', choices)
+
+    def test_profesor_report_detail_shows_objective_columns_and_total_sum(self) -> None:
+        student_user = Usuario.objects.create_user(
+            cedula='E550',
+            email='est550@example.com',
+            password='12345678',
+            nombres='Ana',
+            apellidos='Duran',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Carlos',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Historia de Venezuela',
+            metodo='Ensayo',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[
+                ['Objetivo 1', 'Método 1', 8.0],
+                ['Objetivo 2', 'Método 2', 12.0],
+            ],
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Objetivo 1',
+            objetivo_index=0,
+            nota_obtenida=Decimal('3.00'),
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Objetivo 2',
+            objetivo_index=1,
+            nota_obtenida=Decimal('4.50'),
+        )
+
+        self.client.force_login(self.profesor_user)
+        response = self.client.get(reverse('evaluaciones:profesor_reporte_notas', args=[plan.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Notas de lapso')
+        self.assertContains(response, 'Cátedra')
+        self.assertContains(response, 'Profesor')
+        self.assertContains(response, 'Aula')
+        self.assertContains(response, 'Objetivo 1')
+        self.assertContains(response, 'Objetivo 2')
+        self.assertContains(response, '7.50')
+
+    def test_admin_report_detail_returns_to_admin_aula_detail(self) -> None:
+        admin_user = Usuario.objects.create_user(
+            cedula='A110',
+            email='admin2@example.com',
+            password='12345678',
+            nombres='Admin',
+            apellidos='Reporte',
+            rol='ADMIN',
+        )
+        student_user = Usuario.objects.create_user(
+            cedula='E560',
+            email='est560@example.com',
+            password='12345678',
+            nombres='Beatriz',
+            apellidos='Rivas',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Rafael',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Historia de Venezuela',
+            metodo='Ensayo',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Objetivo 1', 'Método 1', 8.0]],
+            notas_enviadas_al_admin=True,
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Objetivo 1',
+            objetivo_index=0,
+            nota_obtenida=Decimal('3.00'),
+        )
+
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse('evaluaciones:profesor_reporte_notas', args=[plan.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('academico:aula_detail', args=[self.aula.pk]))
+
+    def test_admin_detail_shows_report_and_publish_action_for_sent_notes(self) -> None:
+        admin_user = Usuario.objects.create_user(
+            cedula='A100',
+            email='admin@example.com',
+            password='12345678',
+            nombres='Admin',
+            apellidos='Sistema',
+            rol='ADMIN',
+        )
+        student_user = Usuario.objects.create_user(
+            cedula='E600',
+            email='est6@example.com',
+            password='12345678',
+            nombres='José',
+            apellidos='Mora',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Ana',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Historia de Venezuela',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Historia de Venezuela', 'Ensayo', 20.0]],
+            notas_enviadas_al_admin=True,
+        )
+        EvaluacionObjetivo.objects.create(
+            plan=plan,
+            estudiante=student,
+            objetivo='Historia de Venezuela',
+            objetivo_index=0,
+            nota_obtenida=Decimal('18.00'),
+            observacion='Excelente',
+        )
+
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse('academico:aula_detail', args=[self.aula.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Reporte de notas')
+        self.assertContains(response, 'Publicar notas')
+
+    def test_student_preview_shows_summary_for_published_final_grade(self) -> None:
+        student_user = Usuario.objects.create_user(
+            cedula='E900',
+            email='est900@example.com',
+            password='12345678',
+            nombres='Pedro',
+            apellidos='López',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Carmen',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+        plan = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Historia de Venezuela',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Historia de Venezuela', 'Ensayo', 20.0]],
+        )
+        NotaPublicada.objects.create(
+            plan=plan,
+            estudiante=student,
+            nota_final=Decimal('18.00'),
+        )
+
+        self.client.force_login(student_user)
+        response = self.client.get(reverse('evaluaciones:estudiante_calificaciones'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Profesor responsable:')
+        self.assertContains(response, '18.00')
+        self.assertNotContains(response, 'Objetivo:')
+
+    def test_student_preview_groups_multiple_lapsos_from_same_aula_in_single_context(self) -> None:
+        self.aula.catedra = 'Informática'
+        self.aula.save(update_fields=['catedra'])
+
+        student_user = Usuario.objects.create_user(
+            cedula='E910',
+            email='est910@example.com',
+            password='12345678',
+            nombres='Pedro',
+            apellidos='López',
+            rol='ESTUDIANTE',
+        )
+        student = Estudiante.objects.create(
+            usuario=student_user,
+            representante='Carmen',
+            telefono_representante='04141234567',
+        )
+        Matricula.objects.create(estudiante=student, aula=self.aula)
+
+        plan_i = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='I',
+            objetivo='Historia de Venezuela',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Historia de Venezuela', 'Ensayo', 20.0]],
+            publicado_para_estudiantes=True,
+        )
+        plan_ii = PlanEvaluacion.objects.create(
+            aula=self.aula,
+            lapso='II',
+            objetivo='Historia de Venezuela',
+            metodo='Proyecto',
+            puntuacion_max=Decimal('20.00'),
+            activo=True,
+            objetivos_detallados=[['Historia de Venezuela', 'Ensayo', 20.0]],
+            publicado_para_estudiantes=True,
+        )
+        NotaPublicada.objects.create(plan=plan_i, estudiante=student, nota_final=Decimal('20.00'))
+        NotaPublicada.objects.create(plan=plan_ii, estudiante=student, nota_final=Decimal('17.00'))
+
+        self.client.force_login(student_user)
+        response = self.client.get(reverse('evaluaciones:estudiante_calificaciones'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Informática')
+        self.assertContains(response, 'Ana García')
+        self.assertContains(response, 'I Lapso')
+        self.assertContains(response, 'II Lapso')
+        self.assertContains(response, '20.00')
+        self.assertContains(response, '17.00')
+        self.assertEqual(response.content.decode('utf-8').count('Profesor responsable:'), 1)
 
     def test_admin_can_close_aula_and_publish_notes_to_students(self) -> None:
         admin_user = Usuario.objects.create_user(
@@ -637,9 +988,10 @@ class EvaluacionFormsTestCase(TestCase):
         response = self.client.get(reverse('evaluaciones:estudiante_calificaciones'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Comprender la fotosíntesis')
+        self.assertContains(response, 'Profesor responsable:')
         self.assertContains(response, '18.00')
-        self.assertContains(response, 'Excelente')
+        self.assertNotContains(response, 'Objetivo:')
+        self.assertNotContains(response, 'Excelente')
 
     def test_assign_student_form_filters_by_cedula(self) -> None:
         Usuario.objects.create_user(

@@ -62,6 +62,15 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if plan.notas_enviadas_al_admin %}
+            <p style="color: green;"><strong>Reporte enviado</strong> — <a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}">Ver reporte enviado</a></p>
+            {% elif plan.finalizado or plan.objetivos_detallados or plan.actividades.count %}
+            <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan_pk" value="{{ plan.pk }}">
+                <button type="submit" onclick="return confirm('¿Deseas enviar este reporte al administrador?');">Enviar notas al admin</button>
+            </form>
+            {% endif %}
             <p><a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Ver detalle completo</a></p>
         </div>
         {% endfor %}
@@ -71,13 +80,13 @@
 
     <h2>Acciones del aula</h2>
     <ul>
-        <li><a href="{% url 'evaluaciones:profesor_plan_nuevo' %}">Crear plan</a></li>
+        <li><a href="{% url 'evaluaciones:profesor_plan_nuevo' %}?aula={{ aula.pk }}">Crear plan</a></li>
         <li><a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}?aula={{ aula.pk }}">Asignar estudiantes</a></li>
         {% if puede_enviar_notas %}
         <li>
             <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}">
                 {% csrf_token %}
-                <button type="submit">Enviar notas al admin</button>
+                <button type="submit" onclick="return confirm('¿Deseas enviar este reporte al administrador?');">Enviar notas al admin</button>
             </form>
         </li>
         {% endif %}

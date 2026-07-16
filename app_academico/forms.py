@@ -13,16 +13,16 @@ class AulaVirtualForm(forms.ModelForm):
         required=True,
         widget=forms.Select(attrs={'class': 'form-select'}),
     )
-    lapsos = forms.MultipleChoiceField(
+    ciclo_escolar = forms.CharField(
         required=False,
-        choices=AulaVirtual.LAPSO_CHOICES,
-        widget=forms.CheckboxSelectMultiple,
-        label='Lapsos',
+        max_length=100,
+        label='Periodo escolar',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Periodo escolar 2026-2027'}),
     )
 
     class Meta:
         model = AulaVirtual
-        fields = ['año_curso', 'catedra', 'lapsos', 'activo']
+        fields = ['año_curso', 'catedra', 'ciclo_escolar', 'activo']
         widgets = {
             'año_curso': forms.Select(attrs={'class': 'form-select'}),
             'catedra': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Matemáticas'}),
@@ -37,13 +37,11 @@ class AulaVirtualForm(forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.profesor_id:
             self.initial['profesor'] = self.instance.profesor.usuario
 
-        if self.instance and self.instance.pk and self.instance.lapsos:
-            initial_lapsos = self.instance.lapsos if isinstance(self.instance.lapsos, list) else [self.instance.lapsos]
-            self.fields['lapsos'].initial = initial_lapsos
+        if self.instance and self.instance.pk and self.instance.ciclo_escolar:
+            self.initial['ciclo_escolar'] = self.instance.ciclo_escolar
 
-    def clean_lapsos(self) -> list[str]:
-        lapsos = self.cleaned_data.get('lapsos') or []
-        return list(lapsos)
+    def clean_ciclo_escolar(self) -> str:
+        return (self.cleaned_data.get('ciclo_escolar') or '').strip()
 
     def save(self, commit: bool = True) -> AulaVirtual:
         usuario_profesor: Usuario | None = self.cleaned_data.get('profesor')
@@ -52,7 +50,7 @@ class AulaVirtualForm(forms.ModelForm):
             profesor, _ = Profesor.objects.get_or_create(usuario=usuario_profesor)
 
         instance: AulaVirtual = super().save(commit=False)
-        instance.lapsos = self.cleaned_data.get('lapsos') or []
+        instance.ciclo_escolar = self.cleaned_data.get('ciclo_escolar') or ''
         if profesor is not None:
             instance.profesor = profesor
         if commit:

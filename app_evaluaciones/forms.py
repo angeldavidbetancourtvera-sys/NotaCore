@@ -14,7 +14,7 @@ from .models import Actividad, Calificacion, PlanEvaluacion
 class PlanEvaluacionForm(forms.ModelForm):
     """Formulario para crear planes con una tabla editable de objetivos y ponderaciones."""
 
-    aula = forms.ModelChoiceField(queryset=AulaVirtual.objects.none(), label='Aula', required=True)
+    aula = forms.ModelChoiceField(queryset=AulaVirtual.objects.none(), label='Aula actual', required=True)
     lapso = forms.ChoiceField(choices=[('I', 'I Lapso'), ('II', 'II Lapso'), ('III', 'III Lapso')], label='Lapso', required=True)
     activo = forms.BooleanField(required=False, initial=True, label='Activo')
     objetivo = forms.CharField(required=False, widget=forms.HiddenInput())
@@ -23,15 +23,33 @@ class PlanEvaluacionForm(forms.ModelForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.user = kwargs.pop('user', None)
+        self.aula_context = kwargs.pop('aula_context', None)
         super().__init__(*args, **kwargs)
 
         aulas = AulaVirtual.objects.all()
         if self.user and getattr(self.user, 'rol', '') == 'PROFESOR':
             aulas = aulas.filter(profesor__usuario=self.user)
 
-        self.fields['aula'].queryset = aulas
-        self.fields['aula'].empty_label = 'Seleccione un aula'
-        self.fields['aula'].widget.attrs.update({'class': 'form-select'})
+        if self.aula_context is not None:
+            self.fields['aula'].initial = self.aula_context
+            self.fields['aula'].queryset = AulaVirtual.objects.filter(pk=self.aula_context.pk)
+            self.fields['aula'].widget = forms.HiddenInput()
+            used_lapsos = set(
+                PlanEvaluacion.objects.filter(aula=self.aula_context).values_list('lapso', flat=True)
+            )
+            available_lapsos = [
+                (value, label)
+                for value, label in self.fields['lapso'].choices
+                if value not in used_lapsos
+            ]
+            self.fields['lapso'].choices = available_lapsos
+            if not available_lapsos:
+                self.fields['lapso'].choices = [('', 'No hay lapsos disponibles')]
+        else:
+            self.fields['aula'].queryset = aulas
+            self.fields['aula'].empty_label = 'Seleccione un aula'
+            self.fields['aula'].widget.attrs.update({'class': 'form-select'})
+
         self.fields['lapso'].widget.attrs.update({'class': 'form-select'})
         self.fields['activo'].widget.attrs.update({'class': 'form-check-input'})
 

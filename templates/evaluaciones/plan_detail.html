@@ -46,7 +46,13 @@
                             <td>{{ objetivo }}</td>
                             <td>{{ metodo }}</td>
                             <td>{{ puntuacion }}</td>
-                            <td><a class="link-secondary" href="{% url 'evaluaciones:profesor_objetivo_evaluar' plan.pk forloop.counter0 %}">Evaluar</a></td>
+                            <td>
+                                {% if plan.notas_enviadas_al_admin %}
+                                <span>Reporte enviado</span>
+                                {% else %}
+                                <a class="link-secondary" href="{% url 'evaluaciones:profesor_objetivo_evaluar' plan.pk forloop.counter0 %}">Evaluar</a>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>

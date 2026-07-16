@@ -40,14 +40,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for estudiante in estudiantes %}
+                        {% for fila in filas %}
                         <tr>
-                            <td>{{ estudiante.usuario.get_full_name }}</td>
+                            <td>{{ fila.estudiante.usuario.get_full_name }}</td>
                             <td>
-                                <input class="form-field" type="number" step="0.01" max="{{ objetivo.2 }}" name="nota_{{ estudiante.pk }}" value="{% for evaluation in evaluations %}{% if evaluation.estudiante_id == estudiante.pk %}{{ evaluation.nota_obtenida }}{% endif %}{% endfor %}">
+                                <input class="form-field" type="number" step="0.01" max="{{ objetivo.2 }}" name="nota_{{ fila.estudiante.pk }}" value="{% if fila.nota %}{{ fila.nota|stringformat:'.2f' }}{% endif %}">
                             </td>
                             <td>
-                                <input class="form-field" type="text" name="observacion_{{ estudiante.pk }}" value="{% for evaluation in evaluations %}{% if evaluation.estudiante_id == estudiante.pk %}{{ evaluation.observacion }}{% endif %}{% endfor %}">
+                                <input class="form-field" type="text" name="observacion_{{ fila.estudiante.pk }}" value="{{ fila.observacion }}">
                             </td>
                         </tr>
                         {% empty %}

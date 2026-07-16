@@ -64,6 +64,26 @@
             <p><button type="submit">Guardar aprobación</button></p>
             <p><label><input type="checkbox" name="cerrar_aula" value="1"> Cerrar aula virtual y publicar notas definitivas para estudiantes</label></p>
         </form>
+
+        <h2>Reporte de notas</h2>
+        {% if planes_con_reporte %}
+            {% for plan in planes_con_reporte %}
+                <div style="border:1px solid #ccc; padding:12px; margin-bottom:12px;">
+                    <p><strong>Reporte de notas:</strong> {{ aula.año_curso }}° Año {{ aula.catedra }} {{ plan.get_lapso_display }}. Profesor. {{ aula.profesor.usuario.get_full_name }}</p>
+                    <p><strong>Estudiantes del reporte:</strong> {{ aula.matriculas.count }}</p>
+                    <p><a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}">Ver detalle de notas</a></p>
+                    <form method="post" action="{% url 'academico:aula_detail' aula.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="publicar_notas_plan" value="{{ plan.pk }}">
+                        <button type="submit">Publicar notas</button>
+                    </form>
+                </div>
+            {% empty %}
+                <p>No hay reportes de notas enviados al admin.</p>
+            {% endfor %}
+        {% else %}
+            <p>No hay reportes de notas enviados al admin.</p>
+        {% endif %}
     {% else %}
         <p>No hay planes de evaluación para este aula.</p>
     {% endif %}

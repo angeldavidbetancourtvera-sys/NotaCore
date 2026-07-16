@@ -28,9 +28,22 @@ class PlanEvaluacion(models.Model):
         return (
             self.publicado_para_estudiantes
             or self.aprobado_por_admin
-            or self.finalizado
             or not self.aula.activo
         )
+
+    def calcular_nota_final(self, estudiante: Estudiante) -> Decimal:
+        from django.db.models import Sum
+
+        total = Decimal('0.00')
+        for evaluacion in EvaluacionObjetivo.objects.filter(plan=self, estudiante=estudiante):
+            total += evaluacion.nota_obtenida
+
+        actividades_total = Calificacion.objects.filter(
+            actividad__plan=self,
+            estudiante=estudiante,
+        ).aggregate(total=Sum('nota_obtenida'))['total'] or Decimal('0.00')
+
+        return total + actividades_total
 
     class Meta:
         db_table = 'planes_evaluacion'
@@ -125,3 +138,18 @@ class Calificacion(models.Model):
         ordering = ['-fecha_registro']
         # ✅ AQUÍ NO HAY CheckConstraint cruzado
         # La validación se hace en clean() arriba
+
+
+class NotaPublicada(models.Model):
+    plan = models.ForeignKey(PlanEvaluacion, on_delete=models.CASCADE, related_name='notas_publicadas')
+    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='notas_publicadas')
+    nota_final = models.DecimalField(max_digits=4, decimal_places=2)
+    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.estudiante.usuario.get_full_name()} — {self.plan}: {self.nota_final}"
+
+    class Meta:
+        db_table = 'notas_publicadas'
+        unique_together = ['plan', 'estudiante']
+        ordering = ['-fecha_publicacion']

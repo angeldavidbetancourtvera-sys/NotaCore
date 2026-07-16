@@ -7,37 +7,16 @@
 </head>
 <body>
     <h1>Resumen de calificaciones</h1>
-    {% for item in resumen %}
-    <h2>{{ item.aula.año_curso }}° Año — {{ item.lapso }}</h2>
-    <p><strong>Promedio:</strong> {{ item.promedio|stringformat:'.2f' }} / 20</p>
-    <ul>
-        {% for detalle in item.detalle %}
-        <li>
-            {% if detalle.tipo == 'actividad' %}
-                <strong>Actividad:</strong> {{ detalle.titulo }}
-            {% elif detalle.tipo == 'objetivo' %}
-                <strong>Objetivo:</strong> {{ detalle.titulo }}
-            {% else %}
-                <strong>{{ detalle.titulo }}</strong>
-            {% endif %}
-            {% if detalle.nota_obtenida is not None %}
-                — {{ detalle.nota_obtenida|stringformat:'.2f' }}
-            {% else %}
-                — Sin nota
-            {% endif %}
-            {% if detalle.ponderacion is not None %}
-                <em>(ponderación: {{ detalle.ponderacion|stringformat:'.2f' }})</em>
-            {% endif %}
-            {% if detalle.observacion %}
-                <br>Observación: {{ detalle.observacion }}
-            {% endif %}
-        </li>
+    {% for grupo in resumen %}
+        <h2>{{ grupo.aula.año_curso }}° Año — {{ grupo.aula.catedra|default:'Sin cátedra' }} — Profesor {{ grupo.profesor }}</h2>
+        <p><strong>Profesor responsable:</strong> {{ grupo.profesor }}</p>
+        {% for item in grupo.items %}
+            <p><strong>{{ item.aula.catedra|default:'Sin cátedra' }} {{ item.lapso }}:</strong> {{ item.promedio|stringformat:'.2f' }} puntos</p>
         {% empty %}
-        <li>No hay actividades ni objetivos registrados para este plan.</li>
+            <p>No hay calificaciones disponibles para esta aula.</p>
         {% endfor %}
-    </ul>
     {% empty %}
-    <p>No hay resumen disponible.</p>
+        <p>No hay resumen disponible.</p>
     {% endfor %}
     <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
 </body>

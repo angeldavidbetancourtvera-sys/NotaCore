@@ -91,6 +91,12 @@ class AcademicoRoutesTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="año_curso"')
 
+    def test_admin_aula_form_uses_ciclo_escolar_field_instead_of_lapsos(self) -> None:
+        form = AulaVirtualForm()
+        self.assertNotIn('lapsos', form.fields)
+        self.assertIn('ciclo_escolar', form.fields)
+        self.assertEqual(form.fields['ciclo_escolar'].label, 'Periodo escolar')
+
     def test_admin_aula_create_redirects_to_detail_after_save(self) -> None:
         user = Usuario.objects.create_user(
             cedula='A002',
@@ -115,7 +121,7 @@ class AcademicoRoutesTest(TestCase):
             reverse('academico:aula_create'),
             {
                 'año_curso': '3',
-                'lapsos': ['I', 'II'],
+                'ciclo_escolar': 'Periodo escolar 2026-2027',
                 'profesor': str(profesor_user.cedula),
                 'activo': 'on',
             },
@@ -170,10 +176,10 @@ class AcademicoRoutesTest(TestCase):
         self.assertContains(response, 'Luis Márquez')
         self.assertContains(response, 'Aprob por admin')
 
-    def test_aula_virtual_form_uses_checkbox_widget_for_lapsos(self) -> None:
+    def test_aula_virtual_form_uses_text_input_for_ciclo_escolar(self) -> None:
         form = AulaVirtualForm()
-        self.assertIsInstance(form.fields['lapsos'].widget, forms.CheckboxSelectMultiple)
-        self.assertEqual(form.fields['lapsos'].choices, [('I', 'I Lapso'), ('II', 'II Lapso'), ('III', 'III Lapso')])
+        self.assertIsInstance(form.fields['ciclo_escolar'].widget, forms.TextInput)
+        self.assertEqual(form.fields['ciclo_escolar'].label, 'Periodo escolar')
 
     def test_aula_virtual_form_profesor_queryset_only_includes_profesores(self) -> None:
         profesor_user = Usuario.objects.create_user(

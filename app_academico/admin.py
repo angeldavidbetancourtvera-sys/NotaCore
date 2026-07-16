@@ -16,7 +16,7 @@ class AulaVirtualAdminForm(forms.ModelForm):
 
     class Meta:
         model = AulaVirtual
-        fields = ['año_curso', 'lapsos', 'profesor', 'activo']
+        fields = ['año_curso', 'catedra', 'ciclo_escolar', 'profesor', 'activo']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,13 +63,9 @@ class EstudianteAdmin(admin.ModelAdmin):
 @admin.register(AulaVirtual)
 class AulaVirtualAdmin(admin.ModelAdmin):
     form = AulaVirtualAdminForm
-    list_display = ['__str__', 'año_curso', 'get_lapsos_display', 'profesor', 'activo', 'fecha_creacion']
-    search_fields = ['profesor__usuario__nombres', 'profesor__usuario__apellidos']
+    list_display = ['__str__', 'año_curso', 'ciclo_escolar', 'profesor', 'activo', 'fecha_creacion']
+    search_fields = ['profesor__usuario__nombres', 'profesor__usuario__apellidos', 'ciclo_escolar']
     list_filter = ['año_curso', 'activo', 'fecha_creacion']
-
-    def get_lapsos_display(self, obj):
-        return ', '.join(obj.lapsos) if obj.lapsos else 'Sin lapsos'
-    get_lapsos_display.short_description = 'Lapsos'
 
 
 @admin.register(Matricula)
