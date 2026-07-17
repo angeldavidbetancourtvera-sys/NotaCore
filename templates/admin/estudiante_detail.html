@@ -1,29 +1,75 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle estudiante - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del estudiante</h1>
-    <p><strong>Nombre:</strong> {{ estudiante.usuario.get_full_name }}</p>
-    <p><strong>Cédula:</strong> {{ estudiante.usuario.cedula }}</p>
-    <p><strong>Email:</strong> {{ estudiante.usuario.email }}</p>
+{% extends '_base.html' %}
 
-    <form method="post">
-        {% csrf_token %}
-        <p>
-            <label for="representante"><strong>Representante:</strong></label><br>
-            <input type="text" id="representante" name="representante" value="{{ estudiante.representante }}" maxlength="200">
-        </p>
-        <p>
-            <label for="telefono_representante"><strong>Teléfono:</strong></label><br>
-            <input type="text" id="telefono_representante" name="telefono_representante" value="{{ estudiante.telefono_representante }}" maxlength="20">
-        </p>
-        <button type="submit">Guardar cambios</button>
-    </form>
+{% block title %}Detalle Estudiante - NotaCore{% endblock %}
 
-    <p><a href="{% url 'academico:estudiante_list' %}">Volver a estudiantes</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
-</body>
-</html>
+{% block section_title %}Ficha Académica del Estudiante{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-6 space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-sm relative overflow-hidden">
+        
+        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800/60">
+            <div class="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg">
+                ST
+            </div>
+            <div>
+                <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase">Estudiante Registrado</span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight mt-0.5">{{ estudiante.usuario.get_full_name }}</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm">
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Cédula de Identidad</span>
+                <p class="font-semibold text-slate-200">{{ estudiante.usuario.cedula }}</p>
+            </div>
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Correo Electrónico</span>
+                <p class="font-semibold text-slate-200">{{ estudiante.usuario.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-sm">
+        <div class="pb-6 border-b border-slate-800/60 mb-6">
+            <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Contacto y Tutoría</span>
+            <h3 class="text-lg font-bold text-white tracking-tight mt-1">Datos del Representante Legal</h3>
+            <p class="text-slate-400 text-xs mt-1 leading-relaxed">Edita la información del contacto directo del estudiante para notificaciones institucionales.</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label for="representante" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Nombre del Representante</label>
+                    <input type="text" id="representante" name="representante" value="{{ estudiante.representante }}" maxlength="200"
+                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-sm transition duration-150">
+                </div>
+
+                <div class="space-y-2">
+                    <label for="telefono_representante" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Número de Teléfono</label>
+                    <input type="text" id="telefono_representante" name="telefono_representante" value="{{ estudiante.telefono_representante }}" maxlength="20"
+                           class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-sm transition duration-150">
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-6 border-t border-slate-800/60 mt-8">
+                
+                <a href="{% url 'academico:estudiante_list' %}" 
+                   class="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                    Volver a estudiantes
+                </a>
+
+                <button type="submit" 
+                        class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl text-xs transition duration-150 shadow-md shadow-indigo-600/10">
+                    Guardar cambios
+                </button>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

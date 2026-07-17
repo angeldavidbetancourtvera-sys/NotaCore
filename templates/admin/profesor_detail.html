@@ -1,16 +1,57 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle profesor - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del profesor</h1>
-    <p><strong>Nombre:</strong> {{ profesor.usuario.get_full_name }}</p>
-    <p><strong>Cédula:</strong> {{ profesor.usuario.cedula }}</p>
-    <p><strong>Email:</strong> {{ profesor.usuario.email }}</p>
-    <p><strong>Aulas:</strong> {{ profesor.aulas.count }}</p>
-    <p><a href="{% url 'academico:profesor_list' %}">Volver a profesores</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
-</body>
-</html>
+{% extends '_base.html' %}
+
+{% block title %}Detalle Profesor - NotaCore{% endblock %}
+
+{% block section_title %}Ficha Técnica del Docente{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+        
+        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800/60">
+            <div class="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg">
+                PR
+            </div>
+            <div>
+                <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase">Docente Registrado</span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight mt-0.5">{{ profesor.usuario.get_full_name }}</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm mb-8">
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Cédula de Identidad</span>
+                <p class="font-semibold text-slate-200">{{ profesor.usuario.cedula }}</p>
+            </div>
+            
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Correo Electrónico</span>
+                <p class="font-semibold text-slate-200">{{ profesor.usuario.email }}</p>
+            </div>
+            
+            <div class="space-y-1.5 md:col-span-2">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Aulas Asignadas</span>
+                <div class="flex items-center mt-0.5">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        {{ profesor.aulas.count }} {% if profesor.aulas.count == 1 %}aula virtual{% else %}aulas virtuales{% endif %} asignadas
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-6 border-t border-slate-800/60">
+            <a href="{% url 'academico:profesor_list' %}" 
+               class="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Volver a profesores
+            </a>
+            <a href="{% url 'academico:admin_dashboard' %}" 
+               class="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-850 hover:bg-slate-800 border border-slate-850 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Ir al panel general
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

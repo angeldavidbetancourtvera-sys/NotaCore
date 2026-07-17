@@ -1,20 +1,78 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planes de evaluación - NotaCore</title>
-</head>
-<body>
-    <h1>Planes de evaluación</h1>
-    <ul>
+{% extends '_base.html' %}
+
+{% block title %}Planes de Evaluación - NotaCore{% endblock %}
+
+{% block section_title %}Planes de Evaluación Activos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Planificación de Evaluaciones</span>
+            <p class="text-slate-400 text-sm mt-1 leading-relaxed">
+                Consulta los planes de evaluación y cronogramas académicos asignados para tu año de estudio.
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-3 self-start sm:self-auto">
+            <a href="{% url 'evaluaciones:estudiante_dashboard' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Volver al panel
+            </a>
+            <a href="{% url 'usuarios:dashboard' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800/50 hover:bg-slate-750/50 border border-slate-700/60 text-slate-400 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Ir al inicio
+            </a>
+        </div>
+    </div>
+
+    {% if planes %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for plan in planes %}
-        <li>
-            <strong>{{ plan.aula.año_curso }}° Año</strong> — {{ plan.get_lapso_display }} — {{ plan.objetivo }}
-        </li>
-        {% empty %}
-        <li>No hay planes disponibles.</li>
+        <div class="bg-slate-900 border border-slate-800 hover:border-emerald-500/30 rounded-2xl p-6 transition duration-200 flex flex-col justify-between min-h-[220px] shadow-lg relative overflow-hidden group">
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2.5">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider">
+                        {{ plan.aula.año_curso }}° Año
+                    </span>
+                    <span class="text-xs text-slate-600 font-semibold">/</span>
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                        {{ plan.get_lapso_display }}
+                    </span>
+                </div>
+                
+                <div class="space-y-1.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Objetivo General</span>
+                    <p class="text-sm text-slate-200 font-medium leading-relaxed">
+                        {{ plan.objetivo }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="pt-6">
+                <a href="{% url 'evaluaciones:estudiante_plan_detalle' plan.pk %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-emerald-600 border border-slate-750 hover:border-emerald-500 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition duration-150 w-full">
+                    Consultar cronograma completo
+                </a>
+            </div>
+        </div>
         {% endfor %}
-    </ul>
-    <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
-    <p><a href="{% url 'usuarios:dashboard' %}">Regresar a inicio</a></p>
+    </div>
+
+    {% else %}
+    <div class="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-12 text-center max-w-xl mx-auto my-12">
+        <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 mx-auto mb-4 border border-slate-700">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-2">Sin planes de evaluación</h3>
+        <p class="text-slate-400 text-sm">
+            Actualmente tus profesores no han registrado o publicado planes de evaluación activos en tus asignaturas.
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

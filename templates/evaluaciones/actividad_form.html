@@ -1,20 +1,111 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if form.instance.pk %}Editar actividad{% else %}Crear actividad{% endif %}</title>
-</head>
-<body>
-    <h1>{% if form.instance.pk %}Editar actividad{% else %}Crear actividad{% endif %}</h1>
+{% extends '_base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Actividad{% else %}Crear Actividad{% endif %} - NotaCore
+{% endblock %}
+
+{% block section_title %}
+    {% if form.instance.pk %}Modificar Actividad Evaluativa{% else %}Nueva Actividad Evaluativa{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-6 space-y-6">
+
     {% if plan %}
-    <p>Plan: {{ plan.aula.año_curso }}° Año — {{ plan.get_lapso_display }}</p>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-semibold text-xs rounded-xl">
+                Plan #{{ plan.pk }}
+            </span>
+            <div>
+                <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase block">Plan de Evaluación Vinculado</span>
+                <span class="text-sm font-semibold text-white">
+                    {{ plan.aula.año_curso }}° Año — {{ plan.get_lapso_display }}
+                </span>
+            </div>
+        </div>
+    </div>
     {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-        <a href="{% url 'evaluaciones:profesor_planes' %}">Regresar</a>
-    </form>
-</body>
-</html>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
+        <div class="pb-6 border-b border-slate-800/80 mb-6">
+            <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Parámetros de la Evaluación</span>
+            <h3 class="text-lg font-bold text-white tracking-tight mt-1">Definir Actividad</h3>
+            <p class="text-slate-400 text-xs mt-1 leading-relaxed">
+                Establece la descripción, ponderación porcentual y fecha de entrega para esta actividad académica.
+            </p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-5 tech-form-fields">
+                {{ form.as_p }}
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-6 border-t border-slate-800/80 mt-8">
+                
+                <a href="{% url 'evaluaciones:profesor_planes' %}" 
+                   class="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                    Cancelar y volver
+                </a>
+
+                <button type="submit" 
+                        class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl text-xs transition duration-150 tracking-wide">
+                    {% if form.instance.pk %}Guardar cambios{% else %}Registrar actividad{% endif %}
+                </button>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<style>
+    .tech-form-fields p {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .tech-form-fields label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8; /* text-slate-400 */
+    }
+    .tech-form-fields input, 
+    .tech-form-fields select, 
+    .tech-form-fields textarea {
+        width: 100%;
+        background-color: #020617; /* Slate 950 */
+        border: 1px solid #1e293b; /* Slate 800 */
+        border-radius: 0.75rem; /* rounded-xl */
+        color: #f1f5f9;
+        padding: 0.7rem 0.9rem;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tech-form-fields input:focus, 
+    .tech-form-fields select:focus, 
+    .tech-form-fields textarea:focus {
+        border-color: #4f46e5; /* Indigo 600 */
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+    .tech-form-fields .helptext {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+    .tech-form-fields .errorlist {
+        color: #f43f5e;
+        font-size: 0.75rem;
+        font-weight: 600;
+        list-style-type: none;
+        padding-left: 0;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

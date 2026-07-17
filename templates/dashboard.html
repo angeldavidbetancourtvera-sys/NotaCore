@@ -1,14 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Bienvenido, {{ user.get_full_name|default:user.username }}</h1>
-    <p>Rol: {{ user.rol }}</p>
-    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
-    <p><a href="{% url 'home' %}">Volver al inicio</a></p>
-</body>
-</html>
+{% extends '_base.html' %}
+
+{% block title %}Panel de Control - NotaCore{% endblock %}
+
+{% block section_title %}Consola de Seguridad{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-6 space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Ficha de Identidad</span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight">
+                    {{ user.get_full_name|default:user.username }}
+                </h2>
+                <p class="text-sm text-slate-400 leading-relaxed max-w-xl">
+                    Ficha de autenticación de usuario y control de accesos del sistema global.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <a href="{% url 'home' %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                    Ir al inicio
+                </a>
+                <a href="{% url 'usuarios:logout' %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition duration-150">
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+        <div class="border-b border-slate-800 pb-4">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Permisos del Sistema</span>
+            <h3 class="text-base font-bold text-white tracking-tight mt-1">Credenciales y Rol Asignado</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div class="p-4 bg-slate-950/40 border border-slate-800/80 rounded-xl space-y-1.5">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Identificador (Alias)</span>
+                <span class="block text-slate-200 font-bold">@{{ user.username }}</span>
+            </div>
+
+            <div class="p-4 bg-slate-950/40 border border-slate-800/80 rounded-xl space-y-1.5 flex justify-between items-center">
+                <div class="space-y-1.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rol de Seguridad</span>
+                    <span class="block text-white font-extrabold tracking-wide uppercase">{{ user.rol|default:"Sin rol definido" }}</span>
+                </div>
+                <span class="inline-flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Verificado
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,44 +1,119 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estudiantes - NotaCore</title>
-</head>
-<body>
-    <h1>Estudiantes</h1>
+{% extends '_base.html' %}
 
-    <form method="get">
-        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por cédula, nombre o apellido">
-        <button type="submit">Buscar</button>
-        {% if q %}
-        <a href="{% url 'academico:estudiante_list' %}">Limpiar</a>
-        {% endif %}
-    </form>
+{% block title %}Estudiantes - NotaCore{% endblock %}
 
-    <ul>
-        {% for estudiante in estudiantes %}
-        <li>
-            <a href="{% url 'academico:estudiante_detail' estudiante.pk %}">{{ estudiante.usuario.get_full_name }}</a>
-            <span>— {{ estudiante.usuario.cedula }} — {{ estudiante.usuario.email }}</span>
-        </li>
-        {% empty %}
-        <li>No hay estudiantes registrados.</li>
-        {% endfor %}
-    </ul>
+{% block section_title %}Registro de Estudiantes{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Filtro de Datos</span>
+                <h3 class="text-lg font-bold text-white tracking-tight mt-0.5">Buscar Estudiante</h3>
+            </div>
+            <a href="{% url 'academico:admin_dashboard' %}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+                Volver al panel
+            </a>
+        </div>
+
+        <form method="get" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
+                <input type="text" name="q" value="{{ q }}" placeholder="Buscar por cédula, nombre o apellido..." 
+                       class="w-full pl-4 pr-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-sm transition duration-150">
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" 
+                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition duration-150 tracking-wide">
+                    Buscar
+                </button>
+                {% if q %}
+                <a href="{% url 'academico:estudiante_list' %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl text-xs font-semibold transition duration-150">
+                    Limpiar
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs sm:text-sm text-slate-300">
+                <thead class="bg-slate-950/40 border-b border-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">Nombre Completo</th>
+                        <th scope="col" class="px-6 py-4">Cédula</th>
+                        <th scope="col" class="px-6 py-4">Correo Electrónico</th>
+                        <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for estudiante in estudiantes %}
+                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                        <td class="px-6 py-4 font-semibold text-white">
+                            <a href="{% url 'academico:estudiante_detail' estudiante.pk %}" class="hover:text-indigo-400 transition duration-150">
+                                {{ estudiante.usuario.get_full_name }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400">
+                            {{ estudiante.usuario.cedula }}
+                        </td>
+                        <td class="px-6 py-4 text-slate-400">
+                            {{ estudiante.usuario.email }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'academico:estudiante_detail' estudiante.pk %}" 
+                               class="inline-flex items-center px-3 py-1.5 bg-slate-800 hover:bg-indigo-600 hover:text-white border border-slate-700 hover:border-indigo-500 text-slate-300 text-xs font-semibold rounded-lg transition duration-150">
+                                Ver ficha
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-500 text-xs">
+                            No se han encontrado estudiantes que coincidan con los criterios de búsqueda.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     {% if is_paginated %}
+    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 px-6 py-4 rounded-2xl text-xs font-medium">
+        
         <div>
             {% if page_obj.has_previous %}
-                <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Anterior</a>
-            {% endif %}
-            <span>Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-                <a href="?q={{ q }}&page={{ page_obj.next_page_number }}">Siguiente</a>
+            <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" 
+               class="px-3 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl transition duration-150">
+                Anterior
+            </a>
+            {% else %}
+            <span class="text-slate-600 cursor-not-allowed px-3 py-2 bg-slate-800/40 border border-slate-800/50 rounded-xl">Anterior</span>
             {% endif %}
         </div>
+
+        <div class="text-slate-400">
+            Página <span class="text-white font-bold">{{ page_obj.number }}</span> de <span class="text-white font-bold">{{ paginator.num_pages }}</span>
+        </div>
+
+        <div>
+            {% if page_obj.has_next %}
+            <a href="?q={{ q }}&page={{ page_obj.next_page_number }}" 
+               class="px-3 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl transition duration-150">
+                Siguiente
+            </a>
+            {% else %}
+            <span class="text-slate-600 cursor-not-allowed px-3 py-2 bg-slate-800/40 border border-slate-800/50 rounded-xl">Siguiente</span>
+            {% endif %}
+        </div>
+
+    </div>
     {% endif %}
 
-    <p><a href="{% url 'academico:admin_dashboard' %}">Volver al panel</a></p>
-</body>
-</html>
+</div>
+{% endblock %}

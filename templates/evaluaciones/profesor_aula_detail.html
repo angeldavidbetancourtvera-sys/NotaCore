@@ -1,96 +1,212 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de aula - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del aula</h1>
-    <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
-    <p><strong>Cátedra:</strong> {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}</p>
-    <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
-    <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
-    <p><strong>Estado:</strong> {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</p>
-    <p><strong>Disponibilidad de lapsos:</strong></p>
-    <ul>
-        {% for lapso in lapsos_estado %}
-        <li>{% if lapso.ocupado %}{{ lapso.label }} — ya tiene un plan{% else %}{{ lapso.label }} — disponible{% endif %}</li>
-        {% empty %}
-        <li>No hay lapsos disponibles.</li>
-        {% endfor %}
-    </ul>
+{% extends '_base.html' %}
 
-    <h2>Estudiantes</h2>
-    <ul>
-        {% for estudiante in estudiantes %}
-        <li>{{ estudiante.usuario.get_full_name }}</li>
-        {% empty %}
-        <li>No hay estudiantes matriculados.</li>
-        {% endfor %}
-    </ul>
+{% block title %}Detalle de Aula - NotaCore{% endblock %}
 
-    <h2>Planes</h2>
-    {% if planes %}
-        {% for plan in planes %}
-        <div style="margin-bottom: 1.5rem;">
-            <h3>{{ plan.get_lapso_display }} — {{ plan.activo|yesno:"Activo,Inactivo" }}</h3>
-            {% if plan.aprobado_por_admin %}
-            <p style="color: green;"><strong>Aprobado por admin</strong></p>
-            {% endif %}
-            <p><strong>Objetivo general:</strong> {{ plan.objetivo }}</p>
-            <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
-            <table border="1" cellpadding="6" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Objetivo</th>
-                        <th>Método</th>
-                        <th>Ponderación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
-                    <tr>
-                        <td>{{ objetivo }}</td>
-                        <td>{{ metodo }}</td>
-                        <td>{{ puntuacion }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3">No hay objetivos detallados registrados.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% if plan.notas_enviadas_al_admin %}
-            <p style="color: green;"><strong>Reporte enviado</strong> — <a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}">Ver reporte enviado</a></p>
-            {% elif plan.finalizado or plan.objetivos_detallados or plan.actividades.count %}
-            <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="plan_pk" value="{{ plan.pk }}">
-                <button type="submit" onclick="return confirm('¿Deseas enviar este reporte al administrador?');">Enviar notas al admin</button>
-            </form>
-            {% endif %}
-            <p><a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Ver detalle completo</a></p>
+{% block section_title %}Módulo de Aula{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/85">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Panel de Control</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">
+                {{ aula.año_curso }}° Año &mdash; 
+                <span class="text-slate-300 font-normal">{{ aula.catedra|default:'Sin Cátedra Registrada' }}</span>
+            </h2>
+            <p class="text-slate-400 text-sm mt-1">
+                Profesor Responsable: <span class="text-white font-semibold">{{ aula.profesor.usuario.get_full_name }}</span>
+            </p>
         </div>
-        {% endfor %}
-    {% else %}
-        <p>No hay planes para este aula.</p>
-    {% endif %}
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'evaluaciones:profesor_aulas' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver a aulas
+            </a>
+        </div>
+    </div>
 
-    <h2>Acciones del aula</h2>
-    <ul>
-        <li><a href="{% url 'evaluaciones:profesor_plan_nuevo' %}?aula={{ aula.pk }}">Crear plan</a></li>
-        <li><a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}?aula={{ aula.pk }}">Asignar estudiantes</a></li>
-        {% if puede_enviar_notas %}
-        <li>
-            <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Estado del Aula</span>
+            <div class="mt-4 flex items-center space-x-2">
+                {% if aula.activo %}
+                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-sm font-bold text-emerald-400 uppercase tracking-wider">Activa</span>
+                {% else %}
+                <span class="w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
+                <span class="text-sm font-bold text-rose-400 uppercase tracking-wider">Inactiva</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl col-span-1 md:col-span-2 space-y-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Disponibilidad de Lapsos</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                {% for lapso in lapsos_estado %}
+                <div class="p-3 rounded-xl border text-xs flex flex-col justify-between transition duration-150 {% if lapso.ocupado %}bg-slate-950/40 border-slate-800 text-slate-500{% else %}bg-emerald-500/5 border-emerald-500/20 text-emerald-400{% endif %}">
+                    <span class="font-bold">{{ lapso.label }}</span>
+                    <span class="font-extrabold uppercase text-[9px] mt-1.5 tracking-wider">
+                        {% if lapso.ocupado %}Planificado{% else %}Disponible{% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-500 col-span-3">No hay lapsos registrados en este período académico.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="space-y-4 lg:col-span-1">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Estudiantes Matriculados</span>
+                <span class="text-xs font-bold text-slate-500 bg-slate-900 px-2.5 py-0.5 rounded-full border border-slate-850">{{ estudiantes|length }} Total</span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 max-h-[450px] overflow-y-auto space-y-2">
+                {% for estudiante in estudiantes %}
+                <div class="p-3 bg-slate-950/40 border border-slate-850 rounded-xl flex items-center justify-between hover:border-slate-800 transition duration-150">
+                    <span class="text-xs font-semibold text-slate-200">{{ estudiante.usuario.get_full_name }}</span>
+                    <span class="text-[9px] font-bold text-emerald-400 tracking-wider uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full">Activo</span>
+                </div>
+                {% empty %}
+                <div class="py-12 text-center text-slate-500 text-xs sm:text-sm">
+                    No hay estudiantes matriculados en este aula aún.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="space-y-4 lg:col-span-2">
+            <div class="border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Planes de Evaluación del Aula</span>
+            </div>
+
+            {% if planes %}
+                {% for plan in planes %}
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5 shadow-lg relative overflow-hidden group">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-sm font-extrabold text-white">{{ plan.get_lapso_display }}</span>
+                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {% if plan.activo %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-slate-950 text-slate-500 border border-slate-800{% endif %}">
+                                {{ plan.activo|yesno:"Activo,Inactivo" }}
+                            </span>
+                        </div>
+                        
+                        {% if plan.aprobado_por_admin %}
+                        <span class="inline-flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 bg-emerald-450 rounded-full mr-2"></span> Plan Aprobado
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="space-y-2.5 text-xs sm:text-sm text-slate-300">
+                        <p><span class="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Objetivo General</span> {{ plan.objetivo }}</p>
+                        <p><span class="font-bold text-slate-500 uppercase text-[10px] tracking-wider block mb-0.5">Puntuación Total</span> <span class="text-emerald-400 font-bold text-xs">{{ plan.puntuacion_max }} PTS</span></p>
+                    </div>
+
+                    <div class="border border-slate-800 rounded-xl overflow-hidden">
+                        <table class="w-full border-collapse text-left text-xs text-slate-400">
+                            <thead class="bg-slate-950/55 text-slate-500 border-b border-slate-800 text-[10px] font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2.5">Objetivo</th>
+                                    <th scope="col" class="px-4 py-2.5">Método de Evaluación</th>
+                                    <th scope="col" class="px-4 py-2.5 text-right">Pond.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60">
+                                {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+                                <tr class="hover:bg-slate-800/10 transition duration-150">
+                                    <td class="px-4 py-2.5 text-slate-200 font-medium">{{ objetivo }}</td>
+                                    <td class="px-4 py-2.5">{{ metodo }}</td>
+                                    <td class="px-4 py-2.5 text-right text-white font-bold">{{ puntuacion }} pts</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="px-4 py-4 text-center text-slate-600">No hay objetivos detallados registrados.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 border-t border-slate-800/80">
+                        <a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}" 
+                           class="text-xs font-semibold text-slate-450 hover:text-white transition duration-150 self-start sm:self-auto">
+                            Ver planificación completa &rarr;
+                        </a>
+
+                        {% if plan.notes_enviadas_al_admin %}
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Reporte Enviado</span>
+                            <a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}" 
+                               class="inline-flex items-center px-3 py-1.5 bg-slate-800 border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-emerald-400 text-xs rounded-xl transition duration-150 font-semibold">
+                                Ver reporte enviado
+                            </a>
+                        </div>
+                        {% elif plan.finalizado or plan.objetivos_detallados or plan.actividades.count %}
+                        <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}" class="w-full sm:w-auto">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan_pk" value="{{ plan.pk }}">
+                            <button type="submit" 
+                                    onclick="return confirm('¿Deseas enviar este reporte de calificaciones al administrador?');"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition duration-150">
+                                Enviar Notas al Administrador
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="bg-slate-900/40 border border-slate-800 border-dashed rounded-2xl p-12 text-center text-xs sm:text-sm text-slate-500 leading-relaxed">
+                    No hay planes de evaluación configurados para este aula académica en este momento.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Operaciones de Aula</span>
+            <h3 class="text-sm font-bold text-white mt-0.5">Acciones Rápidas del Aula</h3>
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+            <a href="{% url 'evaluaciones:profesor_plan_nuevo' %}?aula={{ aula.pk }}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-white text-xs rounded-xl font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Programar Plan
+            </a>
+
+            <a href="{% url 'evaluaciones:profesor_asignar_estudiante' %}?aula={{ aula.pk }}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-white text-xs rounded-xl font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Matricular Estudiantes
+            </a>
+
+            {% if puede_enviar_notas %}
+            <form method="post" action="{% url 'evaluaciones:profesor_enviar_notas_admin' aula.pk %}" class="inline-block">
                 {% csrf_token %}
-                <button type="submit" onclick="return confirm('¿Deseas enviar este reporte al administrador?');">Enviar notas al admin</button>
+                <button type="submit" 
+                        onclick="return confirm('¿Deseas enviar todos los reportes al administrador?');"
+                        class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition duration-150 uppercase tracking-wider shadow-lg shadow-emerald-950/20">
+                    Enviar Todas las Notas al Admin
+                </button>
             </form>
-        </li>
-        {% endif %}
-    </ul>
-    <p><a href="{% url 'evaluaciones:profesor_aulas' %}">Volver a aulas</a></p>
-</body>
-</html>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

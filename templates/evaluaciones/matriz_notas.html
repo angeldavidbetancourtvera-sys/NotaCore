@@ -1,36 +1,82 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matriz de notas</title>
-</head>
-<body>
-    <h1>Matriz de notas</h1>
-    <p>Aula: {{ aula.año_curso }}° Año</p>
+{% extends '_base.html' %}
 
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Estudiante</th>
-                {% for actividad in actividades %}
-                <th>{{ actividad.titulo }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for fila in matriz %}
-            <tr>
-                <td>{{ fila.estudiante.usuario.get_full_name }}</td>
-                {% for item in fila.filas %}
-                <td>{{ item.nota|default:'-' }}</td>
-                {% endfor %}
-            </tr>
-            {% empty %}
-            <tr><td colspan="10">No hay datos para mostrar.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <p><a href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al dashboard</a></p>
-</body>
-</html>
+{% block title %}Matriz de Notas - NotaCore{% endblock %}
+
+{% block section_title %}Matriz de Calificaciones{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Base de Datos de Calificaciones</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">
+                Aula: {{ aula.año_curso }}° Año
+            </h2>
+            <p class="text-slate-400 text-sm mt-1 leading-relaxed">
+                Visualización consolidada de calificaciones por estudiante y actividad asignada en este curso.
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-3 self-start sm:self-auto">
+            <a href="{% url 'evaluaciones:profesor_dashboard' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al panel
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            <table class="w-full border-collapse text-left text-xs sm:text-sm text-slate-300">
+                <thead class="bg-slate-950/50 border-b border-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 min-w-[240px]">
+                            Estudiante
+                        </th>
+                        {% for actividad in actividades %}
+                        <th scope="col" class="px-6 py-4 text-center min-w-[120px] border-l border-slate-800/60">
+                            <span class="block text-slate-300 truncate" title="{{ actividad.titulo }}">
+                                {{ actividad.titulo }}
+                            </span>
+                            <span class="block text-[10px] text-emerald-400 mt-1 font-extrabold">
+                                {{ actividad.puntuacion }} PTS
+                            </span>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for fila in matriz %}
+                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                        <td class="px-6 py-4 text-white font-semibold whitespace-nowrap">
+                            {{ fila.estudiante.usuario.get_full_name }}
+                        </td>
+                        {% for item in fila.filas %}
+                        <td class="px-6 py-4 text-center border-l border-slate-800/60">
+                            {% if item.nota is not none %}
+                                <span class="inline-flex items-center justify-center font-bold bg-slate-950 border border-slate-800 px-3 py-1 rounded-full text-xs text-slate-100 min-w-[48px]">
+                                    {{ item.nota|stringformat:".2f" }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-650 font-normal">&mdash;</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ actividades|length|add:1 }}" class="px-6 py-12 text-center text-slate-500 text-xs sm:text-sm">
+                            No existen datos académicos ni estudiantes registrados en esta aula para estructurar la matriz.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

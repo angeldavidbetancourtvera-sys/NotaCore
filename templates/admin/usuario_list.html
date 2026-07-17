@@ -1,37 +1,80 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Usuarios - NotaCore</title>
-</head>
-<body>
-    <h1>Gestión de usuarios</h1>
-    <p><a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
+{% extends '_base.html' %}
 
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Cédula</th>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rol</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario.cedula }}</td>
-                <td>{{ usuario.get_full_name }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>{{ usuario.rol }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4">No hay usuarios registrados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% block title %}Lista de Usuarios - NotaCore{% endblock %}
+
+{% block section_title %}Registro de Usuarios del Sistema{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Directorio de Usuarios</span>
+            <h3 class="text-lg font-bold text-white tracking-tight mt-0.5">Gestión de Credenciales y Roles</h3>
+        </div>
+        <a href="{% url 'academico:admin_dashboard' %}" 
+           class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+            Volver al panel
+        </a>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs sm:text-sm text-slate-300">
+                <thead class="bg-slate-950/40 border-b border-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">Cédula</th>
+                        <th scope="col" class="px-6 py-4">Nombre Completo</th>
+                        <th scope="col" class="px-6 py-4">Correo Electrónico</th>
+                        <th scope="col" class="px-6 py-4">Rol Asignado</th>
+                        <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for usuario in usuarios %}
+                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                        <td class="px-6 py-4 text-slate-400 font-medium">
+                            {{ usuario.cedula }}
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-white">
+                            {{ usuario.get_full_name }}
+                        </td>
+                        <td class="px-6 py-4 text-slate-400">
+                            {{ usuario.email }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if usuario.rol == 'ADMIN' or usuario.rol == 'administrador' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                                Administrador
+                            </span>
+                            {% elif usuario.rol == 'PROFESOR' or usuario.rol == 'profesor' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                                Docente
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                Estudiante
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'academico:usuario_delete' usuario.pk %}" 
+                               class="inline-flex items-center px-3 py-1.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 text-red-400 text-xs font-semibold rounded-lg transition duration-150">
+                                Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-500 text-xs">
+                            No se han encontrado registros de usuarios en la base de datos.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

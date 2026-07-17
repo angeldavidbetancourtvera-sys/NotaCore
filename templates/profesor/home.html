@@ -1,47 +1,122 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel profesor</title>
-</head>
-<body>
-    <main class="page-shell">
-        <section class="page-header">
-            <p class="page-caption">Panel del profesor</p>
-            <h1 class="page-title">Bienvenido, {{ user.get_full_name }}</h1>
-            <p class="page-subtitle">Accede a tus aulas, planes y estudiantes asignados.</p>
-        </section>
+{% extends '_base.html' %}
 
-        <section class="section-panel">
-            <div class="form-footer">
-                <a class="button-secondary" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
-                <a class="button-secondary" href="{% url 'home' %}">Volver al inicio</a>
-            </div>
+{% block title %}Panel del Profesor - NotaCore{% endblock %}
 
-            <div class="card-grid">
-                <article class="card stat-card">
-                    <strong>Ir al dashboard</strong>
-                    <p>Ver resumen y acceso rápido.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_dashboard' %}">Abrir dashboard</a>
-                </article>
-                <article class="card stat-card">
-                    <strong>Aulas</strong>
-                    <p>Administrar tus aulas.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_aulas' %}">Mis aulas</a>
-                </article>
-                <article class="card stat-card">
-                    <strong>Planes</strong>
-                    <p>Crear y revisar planes de evaluación.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_planes' %}">Mis planes</a>
-                </article>
-                <article class="card stat-card">
-                    <strong>Estudiantes</strong>
-                    <p>Ver los estudiantes asignados.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:profesor_estudiantes' %}">Mis estudiantes</a>
-                </article>
+{% block section_title %}Panel del Profesor{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto my-6 space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Acceso Docente</span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight">Bienvenido, {{ user.get_full_name }}</h2>
+                <p class="text-sm text-slate-400 max-w-xl leading-relaxed">
+                    Centro de comando para la gestión de su labor docente. Acceda de manera simplificada a sus aulas, planificaciones didácticas y expedientes de estudiantes.
+                </p>
             </div>
-        </section>
-    </main>
-</body>
-</html>
+            
+            <div class="flex flex-wrap gap-3">
+                <a href="{% url 'home' %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                    Ir al inicio
+                </a>
+                <a href="{% url 'usuarios:logout' %}" 
+                   class="inline-flex items-center justify-center px-4 py-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition duration-150">
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg transition duration-200 group">
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Consola Unificada</span>
+                    <h3 class="text-sm font-bold text-white tracking-tight group-hover:text-emerald-400 transition duration-150">Dashboard</h3>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-xs">
+                    Ver la vista consolidada de promedios, métricas de rendimiento y accesos rápidos del sistema.
+                </p>
+            </div>
+            <div class="border-t border-slate-800/60 mt-6 pt-4 flex justify-end">
+                <a href="{% url 'evaluaciones:profesor_dashboard' %}" 
+                   class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-350 transition duration-150">
+                    Abrir dashboard
+                    <svg class="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </article>
+
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg transition duration-200 group">
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Entornos Virtuales</span>
+                    <h3 class="text-sm font-bold text-white tracking-tight group-hover:text-emerald-400 transition duration-150">Aulas</h3>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-xs">
+                    Supervise y administre sus cátedras asignadas, asigne planificaciones y verifique matrículas.
+                </p>
+            </div>
+            <div class="border-t border-slate-800/60 mt-6 pt-4 flex justify-end">
+                <a href="{% url 'evaluaciones:profesor_aulas' %}" 
+                   class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-350 transition duration-150">
+                    Ver mis aulas
+                    <svg class="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </article>
+
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg transition duration-200 group">
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Estructuras Evaluativas</span>
+                    <h3 class="text-sm font-bold text-white tracking-tight group-hover:text-emerald-400 transition duration-150">Planes</h3>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-xs">
+                    Diseñe, edite y revise los planes de evaluación y ponderaciones asignadas a cada lapso académico.
+                </p>
+            </div>
+            <div class="border-t border-slate-800/60 mt-6 pt-4 flex justify-end">
+                <a href="{% url 'evaluaciones:profesor_planes' %}" 
+                   class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-350 transition duration-150">
+                    Ver mis planes
+                    <svg class="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </article>
+
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-lg transition duration-200 group">
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Base Estudiantil</span>
+                    <h3 class="text-sm font-bold text-white tracking-tight group-hover:text-emerald-400 transition duration-150">Estudiantes</h3>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-xs">
+                    Acceda al directorio completo de estudiantes que cursan en sus respectivas secciones académicas.
+                </p>
+            </div>
+            <div class="border-t border-slate-800/60 mt-6 pt-4 flex justify-end">
+                <a href="{% url 'evaluaciones:profesor_estudiantes' %}" 
+                   class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-350 transition duration-150">
+                    Mis estudiantes
+                    <svg class="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </article>
+
+    </div>
+
+</div>
+{% endblock %}

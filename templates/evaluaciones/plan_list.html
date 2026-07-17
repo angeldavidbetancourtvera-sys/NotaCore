@@ -1,43 +1,93 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planes de evaluación</title>
-</head>
-<body>
-    <main class="page-shell">
-        <section class="page-header">
-            <h1 class="page-caption">Planes disponibles</h1>
-            <h2 class="page-title">Planes de evaluación</h2>
-            <p class="page-subtitle">Revisa, edita y evalúa tus planes activos.</p>
-        </section>
+{% extends '_base.html' %}
 
-        <section class="section-panel">
-            <div class="form-footer">
-                <a class="button" href="{% url 'evaluaciones:profesor_plan_nuevo' %}">Crear nuevo plan</a>
-            </div>
+{% block title %}Planes de Evaluación - NotaCore{% endblock %}
 
-            <div class="card-grid">
-                {% for plan in planes %}
-                <article class="card">
-                    <p><strong>{{ plan.aula.año_curso }}° Año</strong></p>
-                    <p>{{ plan.get_lapso_display }}</p>
-                    <p>{{ plan.objetivo }}</p>
-                    <div class="form-footer">
-                        <a class="button-secondary" href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}">Ver detalle</a>
-                    </div>
-                </article>
-                {% empty %}
-                <div class="card">
-                    <p>No hay planes creados.</p>
+{% block section_title %}Planes de Evaluación{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Planificación Académica</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">Planes Disponibles</h2>
+            <p class="text-slate-400 text-sm mt-1">
+                Revisa, edita, estructura y ejecuta las evaluaciones activas en tus aulas de clases asignadas.
+            </p>
+        </div>
+        <a href="{% url 'evaluaciones:profesor_plan_nuevo' %}" 
+           class="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black text-xs font-bold rounded-xl transition duration-150 uppercase tracking-wider self-start md:self-auto shadow-lg shadow-emerald-950/20">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            Crear nuevo plan
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for plan in planes %}
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-6 shadow-lg flex flex-col justify-between transition duration-200 relative overflow-hidden group">
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-xs font-bold text-slate-200 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">
+                        {{ plan.aula.año_curso }}° Año
+                    </span>
+                    <span class="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        {{ plan.get_lapso_display }}
+                    </span>
                 </div>
-                {% endfor %}
+
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Objetivo General</span>
+                    <h3 class="text-base font-bold text-white leading-snug line-clamp-2 tracking-tight group-hover:text-emerald-400 transition duration-150" title="{{ plan.objetivo }}">
+                        {{ plan.objetivo }}
+                    </h3>
+                </div>
             </div>
-            <div class="form-footer">
-                <a class="button-secondary" href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al dashboard</a>
+
+            <div class="border-t border-slate-800/60 mt-6 pt-4 flex items-center justify-end">
+                <a href="{% url 'evaluaciones:profesor_plan_detalle' plan.pk %}" 
+                   class="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white transition duration-150">
+                    Ver detalles del plan
+                    <svg class="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
-        </section>
-    </main>
-</body>
-</html>
+        </article>
+        {% empty %}
+        <div class="col-span-1 md:col-span-2 bg-slate-900/40 border border-slate-800 border-dashed rounded-2xl p-12 text-center">
+            <div class="max-w-md mx-auto space-y-4">
+                <div class="mx-auto w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <p class="font-bold text-white text-sm">No se encontraron planes de evaluación</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">Aún no hay planes de evaluación vinculados a tu cuenta de profesor. Comienza programando tu primer plan de lapso.</p>
+                </div>
+                <div class="pt-2">
+                    <a href="{% url 'evaluaciones:profesor_plan_nuevo' %}" 
+                       class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                        Programar primer plan
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="flex items-center justify-start pt-4">
+        <a href="{% url 'evaluaciones:profesor_dashboard' %}" 
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+            <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver al panel
+        </a>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,35 +1,125 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle estudiante - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del estudiante</h1>
-    <p><strong>Nombre:</strong> {{ estudiante.usuario.get_full_name }}</p>
-    <p><strong>Cédula:</strong> {{ estudiante.usuario.cedula }}</p>
-    <p><strong>Email:</strong> {{ estudiante.usuario.email }}</p>
-    <p><strong>Representante:</strong> {{ estudiante.representante }}</p>  #En el login del estudiante pedir este requisito (representante)
-    <p><strong>Teléfono:</strong> {{ estudiante.telefono_representante }}</p>
+{% extends '_base.html' %}
 
-    <h2>Aulas</h2>
-    <ul>
-        {% for aula in aulas %}
-        <li>{{ aula.año_curso }}° Año</li>
-        {% empty %}
-        <li>No tiene aulas asignadas.</li>
-        {% endfor %}
-    </ul>
+{% block title %}Detalle de Estudiante - NotaCore{% endblock %}
 
-    <h2>Calificaciones</h2>
-    <ul>
-        {% for calificacion in calificaciones %}
-        <li>{{ calificacion.actividad.titulo }} — {{ calificacion.nota_obtenida }}</li>
-        {% empty %}
-        <li>No hay calificaciones registradas.</li>
-        {% endfor %}
-    </ul>
-    <p><a href="{% url 'evaluaciones:profesor_estudiantes' %}">Volver a estudiantes</a></p>
-</body>
-</html>
+{% block section_title %}Ficha del Estudiante{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Ficha Estudiantil</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">
+                {{ estudiante.usuario.get_full_name }}
+            </h2>
+            <p class="text-slate-400 text-sm mt-1">
+                Cédula de Identidad: <span class="text-white font-semibold">{{ estudiante.usuario.cedula }}</span>
+            </p>
+        </div>
+        <a href="{% url 'evaluaciones:profesor_estudiantes' %}" 
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+            <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver a estudiantes
+        </a>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+        <div class="border-b border-slate-800/60 pb-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Información de Contacto y Representación</span>
+            <h3 class="text-sm font-bold text-white mt-0.5">Información General</h3>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Correo Electrónico</span>
+                <span class="text-slate-200 break-all">{{ estudiante.usuario.email }}</span>
+            </div>
+
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Representante Legal</span>
+                <span class="text-slate-200 font-semibold">{{ estudiante.representante|default:'No especificado' }}</span>
+            </div>
+
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Teléfono de Contacto</span>
+                <span class="text-slate-200">{{ estudiante.telefono_representante|default:'Sin registro' }}</span>
+            </div>
+
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Estado del Alumno</span>
+                <div>
+                    <span class="inline-flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span> Activo
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="space-y-4 lg:col-span-1">
+            <div class="border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Inscripción Académica</span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+                {% for aula in aulas %}
+                <div class="p-3 bg-slate-950/40 border border-slate-850 rounded-xl flex items-center justify-between hover:border-slate-800 transition duration-150">
+                    <span class="text-xs font-bold text-slate-200">{{ aula.año_curso }}° Año</span>
+                    <span class="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Cursando</span>
+                </div>
+                {% empty %}
+                <div class="py-8 text-center text-slate-500 text-xs sm:text-sm">
+                    Sin aulas asignadas en este ciclo académico.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="space-y-4 lg:col-span-2">
+            <div class="border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Registro de Calificaciones</span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left text-xs text-slate-350">
+                        <thead class="bg-slate-950/55 border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-6 py-4">Actividad Evaluativa</th>
+                                <th scope="col" class="px-6 py-4 text-right w-[30%]">Calificación</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            {% for calificacion in calificaciones %}
+                            <tr class="hover:bg-slate-800/10 transition duration-150">
+                                <td class="px-6 py-4 text-slate-200 font-semibold">
+                                    {{ calificacion.actividad.titulo }}
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-950 border border-slate-850 text-white shadow-inner">
+                                        {{ calificacion.nota_obtenida }} <span class="text-[9px] text-slate-500 ml-1.5 uppercase font-bold">Pts</span>
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="px-6 py-12 text-center text-slate-500 text-xs sm:text-sm leading-relaxed">
+                                    No se detectan calificaciones registradas en el sistema para este estudiante.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,29 +1,87 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis aulas - NotaCore</title>
-</head>
-<body>
-    <h1>Mis aulas virtuales</h1>
-    <p>Selecciona el aula en la que deseas entrar.</p>
-    <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
+{% extends '_base.html' %}
+
+{% block title %}Mis Aulas - NotaCore{% endblock %}
+
+{% block section_title %}Mis Aulas Virtuales{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Mis Clases</span>
+            <p class="text-slate-400 text-sm mt-1 leading-relaxed">
+                Selecciona el aula virtual en la que deseas ingresar para gestionar tus actividades.
+            </p>
+        </div>
+        <a href="{% url 'evaluaciones:estudiante_dashboard' %}" 
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+            <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver al panel
+        </a>
+    </div>
 
     {% if aulas %}
-    <ul>
+    <div class="grid grid-cols-1 gap-4">
         {% for aula in aulas %}
-        <li>
-            <strong>{% if aula.catedra %}{{ aula.año_curso }}° Año — {{ aula.catedra }}{% else %}{{ aula.año_curso }}° Año{% endif %}</strong> — Profesor: {{ aula.profesor.usuario.get_full_name }}
-            <br>
-            <span>Lapsos: {{ aula.get_lapsos_display }}</span>
-            <br>
-            <a href="{% url 'evaluaciones:estudiante_aula_detalle' aula.pk %}">Entrar al aula</a>
-        </li>
+        <div class="bg-slate-900 border border-slate-800 hover:border-emerald-500/30 rounded-2xl p-6 transition duration-200 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md relative overflow-hidden">
+            
+            <div class="space-y-3.5">
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider">
+                        Aula #{{ aula.pk }}
+                    </span>
+                    <h2 class="text-xl font-extrabold text-white tracking-tight">
+                        {% if aula.catedra %}
+                            {{ aula.año_curso }}° Año — {{ aula.catedra }}
+                        {% else %}
+                            {{ aula.año_curso }}° Año
+                        {% endif %}
+                    </h2>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center gap-y-2 gap-x-6 text-xs sm:text-sm text-slate-400">
+                    <p class="flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Profesor:<span class="text-slate-200 ml-1.5 font-semibold">{{ aula.profesor.usuario.get_full_name }}</span>
+                    </p>
+                    <p class="flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Lapsos:<span class="text-slate-200 ml-1.5 font-semibold">{{ aula.get_lapsos_display }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center">
+                <a href="{% url 'evaluaciones:estudiante_aula_detalle' aula.pk %}" 
+                   class="w-full md:w-auto text-center bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-xl text-xs transition duration-150 tracking-wide">
+                    Entrar al aula
+                </a>
+            </div>
+
+        </div>
         {% endfor %}
-    </ul>
+    </div>
+    
     {% else %}
-    <p>No estás matriculado en ninguna aula virtual.</p>
+    <div class="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-12 text-center max-w-xl mx-auto my-12">
+        <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 mx-auto mb-4 border border-slate-700">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h3 class="text-white font-bold text-lg mb-2">Sin aulas asignadas</h3>
+        <p class="text-slate-400 text-sm">
+            Actualmente no te encuentras matriculado en ninguna sección o aula virtual de la institución.
+        </p>
+    </div>
     {% endif %}
-</body>
-</html>
+
+</div>
+{% endblock %}

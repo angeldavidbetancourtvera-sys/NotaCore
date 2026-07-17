@@ -1,93 +1,223 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle del aula - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del aula</h1>
-    <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
-    <p><strong>Cátedra:</strong> {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}</p>
-    <p><strong>Profesor responsable:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
-    <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
-    <p><strong>Estado:</strong> {% if aula.activo %}Activa{% else %}Inactiva{% endif %}</p>
+{% extends '_base.html' %}
 
-    <h2>Estudiantes pertenecientes al aula</h2>
-    <ul>
-        {% for matricula in aula.matriculas.all %}
-        <li>{{ matricula.estudiante.usuario.get_full_name }}</li>
-        {% empty %}
-        <li>No hay estudiantes matriculados.</li>
-        {% endfor %}
-    </ul>
+{% block title %}Detalle del Aula - NotaCore{% endblock %}
 
-    <h2>Plan de evaluación</h2>
-    {% if aula.planes.exists %}
-        <form method="post">
-            {% csrf_token %}
-            <table border="1" cellpadding="6" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Lapso</th>
-                        <th>Objetivo</th>
-                        <th>Objetivos detallados</th>
-                        <th>Aprobado por admin</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for plan in aula.planes.all %}
-                    <tr>
-                        <td>{{ plan.get_lapso_display }}</td>
-                        <td>{{ plan.objetivo }}</td>
-                        <td>
-                            {% if plan.objetivos_detallados %}
-                                <ul>
-                                    {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
-                                    <li>{{ objetivo }} — {{ metodo }} — {{ puntuacion }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% else %}
-                                <span>No hay objetivos detallados.</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="aprobado_{{ plan.pk }}" {% if plan.activo %}checked{% endif %}>
-                                Aprob por admin
-                            </label>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <p><button type="submit">Guardar aprobación</button></p>
-            <p><label><input type="checkbox" name="cerrar_aula" value="1"> Cerrar aula virtual y publicar notas definitivas para estudiantes</label></p>
-        </form>
+{% block section_title %}Administración Académica / Detalle del Aula{% endblock %}
 
-        <h2>Reporte de notas</h2>
-        {% if planes_con_reporte %}
-            {% for plan in planes_con_reporte %}
-                <div style="border:1px solid #ccc; padding:12px; margin-bottom:12px;">
-                    <p><strong>Reporte de notas:</strong> {{ aula.año_curso }}° Año {{ aula.catedra }} {{ plan.get_lapso_display }}. Profesor. {{ aula.profesor.usuario.get_full_name }}</p>
-                    <p><strong>Estudiantes del reporte:</strong> {{ aula.matriculas.count }}</p>
-                    <p><a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}">Ver detalle de notas</a></p>
-                    <form method="post" action="{% url 'academico:aula_detail' aula.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="publicar_notas_plan" value="{{ plan.pk }}">
-                        <button type="submit">Publicar notas</button>
-                    </form>
+{% block content %}
+<div class="max-w-6xl mx-auto my-2 space-y-6">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+        
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+            <div class="space-y-2">
+                <span class="inline-flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    {% if aula.activo %}Activo / En curso{% else %}Inactivo / Archivado{% endif %}
+                </span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight">
+                    {{ aula.año_curso }}° Año — {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}
+                </h2>
+                <p class="text-xs text-slate-400 max-w-xl leading-relaxed">
+                    Cátedra de especialidad bajo la supervisión directa del docente asignado. Gestione planes, reportes de notas y listado de matrícula asociada.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-2.5 shrink-0">
+                <a href="{% url 'academico:aula_update' aula.pk %}" 
+                   class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                    Editar aula
+                </a>
+                <a href="{% url 'academico:aula_delete' aula.pk %}" 
+                   class="inline-flex items-center justify-center px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl text-xs font-semibold transition duration-150">
+                    Eliminar aula
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-800/60 text-xs">
+            <div class="p-3 bg-slate-950/40 border border-slate-800/50 rounded-xl">
+                <span class="text-[10px] text-slate-500 block font-semibold uppercase tracking-wider">Docente Responsable</span>
+                <span class="text-slate-200 font-bold block mt-1">{{ aula.profesor.usuario.get_full_name }}</span>
+            </div>
+            <div class="p-3 bg-slate-950/40 border border-slate-800/50 rounded-xl">
+                <span class="text-[10px] text-slate-500 block font-semibold uppercase tracking-wider">Planificación Lapsos</span>
+                <span class="text-slate-200 font-bold block mt-1">{{ aula.get_lapsos_display }}</span>
+            </div>
+            <div class="p-3 bg-slate-950/40 border border-slate-800/50 rounded-xl">
+                <span class="text-[10px] text-slate-500 block font-semibold uppercase tracking-wider">Estudiantes Matriculados</span>
+                <span class="text-slate-200 font-bold block mt-1">{{ aula.matriculas.count }} alumnos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-8 space-y-6">
+            
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="border-b border-slate-800/60 pb-3">
+                    <h3 class="text-base font-bold text-white">Planes de Evaluación</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Gestione y valide las planificaciones académicas de cada lapso.</p>
                 </div>
-            {% empty %}
-                <p>No hay reportes de notas enviados al admin.</p>
-            {% endfor %}
-        {% else %}
-            <p>No hay reportes de notas enviados al admin.</p>
-        {% endif %}
-    {% else %}
-        <p>No hay planes de evaluación para este aula.</p>
-    {% endif %}
 
-    <p><a href="{% url 'academico:aula_update' aula.pk %}">Editar</a> | <a href="{% url 'academico:aula_delete' aula.pk %}">Eliminar</a> | <a href="{% url 'academico:aula_list' %}">Volver a la lista</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
-</body>
-</html>
+                {% if aula.planes.exists %}
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/20">
+                            <table class="w-full border-collapse text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
+                                        <th class="p-4">Lapso</th>
+                                        <th class="p-4">Objetivo Principal</th>
+                                        <th class="p-4">Objetivos Detallados</th>
+                                        <th class="p-4 text-center">Estado Admin</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/50 text-slate-300">
+                                    {% for plan in aula.planes.all %}
+                                    <tr class="hover:bg-slate-800/10 transition">
+                                        <td class="p-4 font-bold text-white whitespace-nowrap">{{ plan.get_lapso_display }}</td>
+                                        <td class="p-4 text-xs max-w-xs leading-relaxed">{{ plan.objetivo }}</td>
+                                        <td class="p-4 text-xs space-y-2">
+                                            {% if plan.objetivos_detallados %}
+                                                <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                                                    {% for objetivo, metodo, puntuacion in plan.objetivos_detallados %}
+                                                    <li>
+                                                        <strong class="text-slate-200">{{ objetivo }}</strong> 
+                                                        <span class="text-slate-500 font-medium text-[10px]">({{ metodo }} • {{ puntuacion }} pts)</span>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <span class="text-slate-500 italic">No hay sub-objetivos definidos.</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <label class="inline-flex items-center gap-2 cursor-pointer justify-center">
+                                                <input type="checkbox" 
+                                                       name="aprobado_{{ plan.pk }}" 
+                                                       class="rounded bg-slate-950 border-slate-800 text-indigo-500 focus:ring-0 cursor-pointer w-4 h-4"
+                                                       {% if plan.activo %}checked{% endif %}>
+                                                <span class="text-[11px] font-semibold text-slate-400 select-none">Aprobar</span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-4 bg-slate-950/40 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <label class="inline-flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="cerrar_aula" value="1" class="mt-1 rounded bg-slate-950 border-slate-800 text-indigo-500 focus:ring-0 cursor-pointer w-4 h-4">
+                                <span class="text-xs text-slate-400 leading-normal select-none">
+                                    <strong class="text-white block font-semibold">Cerrar aula virtual</strong>
+                                    Finalizar y publicar definitivamente el acumulado a los alumnos.
+                                </span>
+                            </label>
+                            
+                            <button type="submit" 
+                                    class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition duration-150 shrink-0 shadow-sm shadow-indigo-600/10">
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </form>
+
+                {% else %}
+                    <div class="p-8 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 text-xs">
+                        No se han encontrado planes de evaluación para esta sección académica.
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if aula.planes.exists %}
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="border-b border-slate-800/60 pb-3">
+                    <h3 class="text-base font-bold text-white">Reportes de Calificaciones</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Control de planillas entregadas por el profesor para su validación.</p>
+                </div>
+
+                {% if planes_con_reporte %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for plan in planes_con_reporte %}
+                            <div class="bg-slate-950/30 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-4">
+                                <div class="space-y-1">
+                                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Reporte entregado</span>
+                                    <h4 class="text-xs font-bold text-white leading-snug">
+                                        {{ aula.año_curso }}° Año {{ aula.catedra }} — {{ plan.get_lapso_display }}
+                                    </h4>
+                                    <span class="text-[10px] text-slate-500 block">
+                                        Alumnos en planilla: <strong class="text-slate-350">{{ aula.matriculas.count }} estudiantes</strong>
+                                    </span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between pt-3 border-t border-slate-800/50">
+                                    <a href="{% url 'evaluaciones:profesor_reporte_notas' plan.pk %}" 
+                                       class="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 transition">
+                                        Ver calificaciones
+                                    </a>
+                                    
+                                    <form method="post" action="{% url 'academico:aula_detail' aula.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="publicar_notas_plan" value="{{ plan.pk }}">
+                                        <button type="submit" 
+                                                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-[10px] font-semibold rounded-lg transition uppercase tracking-wider">
+                                            Publicar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-8 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 text-xs">
+                        No se han registrado reportes de calificaciones pendientes.
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+            
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="border-b border-slate-800/60 pb-3">
+                    <h3 class="text-base font-bold text-white">Estudiantes Pertenecientes</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Lista de alumnos asignados a la matrícula.</p>
+                </div>
+
+                <ul class="divide-y divide-slate-800/50 text-xs">
+                    {% for matricula in aula.matriculas.all %}
+                        <li class="py-2.5 flex items-center justify-between gap-2">
+                            <span class="font-semibold text-slate-200">
+                                {{ matricula.estudiante.usuario.get_full_name }}
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-semibold uppercase">
+                                Matriculado
+                            </span>
+                        </li>
+                    {% empty %}
+                        <li class="py-6 text-center text-slate-500">
+                            Sin alumnos en esta sección académica.
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="pt-4 border-t border-slate-800/60 flex flex-wrap gap-4 text-xs justify-between">
+        <a href="{% url 'academico:aula_list' %}" class="text-slate-400 hover:text-white transition">
+            &larr; Volver a la lista de aulas
+        </a>
+        <a href="{% url 'academico:admin_dashboard' %}" class="text-indigo-400 hover:text-indigo-300 transition font-bold">
+            Ir al dashboard del administrador &rarr;
+        </a>
+    </div>
+
+</div>
+{% endblock %}

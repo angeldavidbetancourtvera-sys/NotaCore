@@ -1,49 +1,104 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de notas</title>
-</head>
-<body>
-    <h1>Notas de lapso {{ plan.get_lapso_display }}</h1>
-    <p><strong>Cátedra:</strong> {{ aula.catedra|default:"Sin cátedra registrada" }}</p>
-    <p><strong>Profesor:</strong> {{ profesor }}</p>
-    <p><strong>Aula:</strong> {{ aula.año_curso }}° Año {{ aula.catedra }}</p>
+{% extends '_base.html' %}
 
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Nombres y Apellidos</th>
-                <th>Cédula</th>
-                {% for objetivo, metodo, puntuacion in objetivos %}
-                <th>{{ objetivo }}</th>
-                {% endfor %}
-                <th>Sumatoria</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for fila in filas %}
-            <tr>
-                <td>{{ fila.estudiante.usuario.get_full_name }}</td>
-                <td>{{ fila.cedula }}</td>
-                {% for nota in fila.notas %}
-                <td>{{ nota|stringformat:'.2f' }}</td>
-                {% endfor %}
-                <td>{{ fila.total|stringformat:'.2f' }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="{{ objetivos|length|add:2 }}">No hay estudiantes matriculados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% block title %}Reporte de Notas - NotaCore{% endblock %}
 
-    {% if request.user.rol == 'ADMIN' %}
-    <p><a href="{% url 'academico:aula_detail' aula.pk %}">Volver al aula</a></p>
-    {% else %}
-    <p><a href="{% url 'evaluaciones:profesor_aula_detalle' aula.pk %}">Volver al aula</a></p>
-    {% endif %}
-</body>
-</html>
+{% block section_title %}Planilla de Calificaciones{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Registro Oficial</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">
+                Planilla de Notas: <span class="text-slate-350 font-medium">{{ plan.get_lapso_display }}</span>
+            </h2>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-400 mt-2">
+                <p>Cátedra: <span class="text-slate-200 font-semibold">{{ aula.catedra|default:"Sin cátedra registrada" }}</span></p>
+                <span class="hidden sm:inline text-slate-700">&bull;</span>
+                <p>Docente: <span class="text-slate-200 font-semibold">{{ profesor }}</span></p>
+                <span class="hidden sm:inline text-slate-700">&bull;</span>
+                <p>Aula: <span class="text-slate-200 font-semibold">{{ aula.año_curso }}° Año</span></p>
+            </div>
+        </div>
+        
+        <div>
+            {% if request.user.rol == 'ADMIN' %}
+            <a href="{% url 'academico:aula_detail' aula.pk %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al aula
+            </a>
+            {% else %}
+            <a href="{% url 'evaluaciones:profesor_aula_detalle' aula.pk %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al aula
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+        
+        <div class="p-4 bg-slate-950/40 border-b border-slate-800/80 flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Planilla de Rendimiento</span>
+            <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                {{ filas|length }} estudiantes registrados
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs text-slate-300">
+                <thead class="bg-slate-950/20 border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 font-bold text-slate-400">Nombres y Apellidos</th>
+                        <th scope="col" class="px-6 py-4 min-w-[120px]">Cédula</th>
+                        {% for objetivo, metodo, puntuacion in objetivos %}
+                        <th scope="col" class="px-6 py-4 text-center min-w-[110px]" title="{{ objetivo }} ({{ metodo }})">
+                            <span class="block text-slate-350 text-[10px] font-semibold">{{ objetivo }}</span>
+                            <span class="text-[9px] text-slate-500 font-medium">Pond: {{ puntuacion }} pts</span>
+                        </th>
+                        {% endfor %}
+                        <th scope="col" class="px-6 py-4 text-right font-bold text-[#10B981] min-w-[100px]">Sumatoria</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-850">
+                    {% for fila in filas %}
+                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                        <td class="px-6 py-4 text-slate-200 font-bold">
+                            {{ fila.estudiante.usuario.get_full_name }}
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 font-medium">
+                            {{ fila.cedula }}
+                        </td>
+                        {% for nota in fila.notas %}
+                        <td class="px-6 py-4 text-center text-slate-200 font-bold">
+                            {{ nota|stringformat:'.2f' }}
+                        </td>
+                        {% endfor %}
+                        <td class="px-6 py-4 text-right">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                {{ fila.total|stringformat:'.2f' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ objetivos|length|add:3 }}" class="px-6 py-12 text-center text-slate-500 text-xs sm:text-sm">
+                            <p class="font-bold text-slate-450">Sin estudiantes registrados</p>
+                            <p class="text-xs text-slate-500 mt-1">No se han registrado estudiantes en este aula de clases.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

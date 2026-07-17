@@ -1,50 +1,82 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administrador - NotaCore</title>
-</head>
-<body>
-    <h1>Panel de administración</h1>
-    <p>Resumen general del sistema.</p>
-    <p><a href="{% url 'usuarios:logout' %}">Cerrar sesión</a></p>
+{% extends '_base.html' %}
 
-    <ul>
-        <li>Total de aulas: {{ total_aulas }}</li>
-        <li>Total de profesores: {{ total_profesores }}</li>
-        <li>Total de estudiantes: {{ total_estudiantes }}</li>
-    </ul>
+{% block title %}Dashboard Administrador - NotaCore{% endblock %}
 
-    <h2>Gestión rápida</h2>
-    <ul>
-        <li><a href="{% url 'academico:aula_list' %}">Ver aulas</a></li>
-        <li><a href="{% url 'academico:usuario_list' %}">Ver usuarios</a></li>
-        <li><a href="{% url 'academico:profesor_list' %}">Ver profesores</a></li>
-        <li><a href="{% url 'academico:estudiante_list' %}">Ver estudiantes</a></li>
-    </ul>
+{% block section_title %}Panel de Control Global{% endblock %}
 
-    <h2>Aulas por año</h2>
-    <p><a href="{% url 'home' %}">Volver al inicio</a></p>
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Año</th>
-                <th>Secciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in aulas_por_anio %}
-            <tr>
-                <td>{{ item.año_curso }}° Año</td>
-                <td>{{ item.total }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2">No hay aulas registradas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Vista de Administrador</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">Resumen General</h2>
+            <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Estadísticas vitales y control de recursos del sistema NotaCore.</p>
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+            <a href="{% url 'home' %}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Ir al inicio
+            </a>
+            <a href="{% url 'usuarios:logout' %}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl text-xs font-semibold transition duration-150">
+                Cerrar sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden transition duration-150 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Aulas</p>
+            <p class="mt-3 text-4xl font-extrabold text-white tracking-tight">
+                {{ total_aulas }}
+            </p>
+            <div class="mt-4 h-1 w-12 bg-indigo-500 rounded-full"></div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden transition duration-150 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Profesores</p>
+            <p class="mt-3 text-4xl font-extrabold text-white tracking-tight">
+                {{ total_profesores }}
+            </p>
+            <div class="mt-4 h-1 w-12 bg-indigo-500 rounded-full"></div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden transition duration-150 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Estudiantes</p>
+            <p class="mt-3 text-4xl font-extrabold text-white tracking-tight">
+                {{ total_estudiantes }}
+            </p>
+            <div class="mt-4 h-1 w-12 bg-indigo-500 rounded-full"></div>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+        <div>
+            <h3 class="text-base font-bold text-white">Navegación y Administración</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Accesos directos a los módulos de gestión central del sistema.</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2.5">
+            <a href="{% url 'academico:aula_list' %}" 
+               class="inline-flex items-center px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-indigo-400 text-xs font-semibold rounded-xl transition duration-150">
+                Gestionar aulas
+            </a>
+            <a href="{% url 'academico:usuario_list' %}" 
+               class="inline-flex items-center px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-indigo-400 text-xs font-semibold rounded-xl transition duration-150">
+                Gestionar usuarios
+            </a>
+            <a href="{% url 'academico:profesor_list' %}" 
+               class="inline-flex items-center px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-indigo-400 text-xs font-semibold rounded-xl transition duration-150">
+                Gestionar profesores
+            </a>
+            <a href="{% url 'academico:estudiante_list' %}" 
+               class="inline-flex items-center px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-indigo-400 text-xs font-semibold rounded-xl transition duration-150">
+                Gestionar estudiantes
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

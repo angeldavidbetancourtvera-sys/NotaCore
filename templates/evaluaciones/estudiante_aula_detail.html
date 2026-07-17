@@ -1,70 +1,151 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle del aula - NotaCore</title>
-</head>
-<body>
-    <h1>Detalle del aula</h1>
-    <p><strong>Año:</strong> {{ aula.año_curso }}° Año</p>
-    <p><strong>Cátedra:</strong> {% if aula.catedra %}{{ aula.catedra }}{% else %}Sin cátedra registrada{% endif %}</p>
-    <p><strong>Profesor:</strong> {{ aula.profesor.usuario.get_full_name }}</p>
-    <p><strong>Lapsos:</strong> {{ aula.get_lapsos_display }}</p>
+{% extends '_base.html' %}
 
-    <h2>Plan de evaluación</h2>
-    {% if planes %}
-        {% for plan in planes %}
-        <div style="margin-bottom: 1.5rem;">
-            <h3>{{ plan.get_lapso_display }}</h3>
-            <p><strong>Objetivo general:</strong> {{ plan.objetivo }}</p>
-            <p><strong>Puntuación máxima:</strong> {{ plan.puntuacion_max }}</p>
-            <table border="1" cellpadding="6" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Objetivo</th>
-                        <th>Método</th>
-                        <th>Ponderación</th>
-                        <th>Calificación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in plan_rows %}
-                        {% if row.plan.pk == plan.pk %}
-                            {% for fila in row.filas %}
-                            <tr>
-                                <td><strong>Objetivo {{ forloop.counter }}:</strong> {{ fila.objetivo }}</td>
-                                <td>{{ fila.metodo }}</td>
-                                <td>{{ fila.puntuacion|stringformat:".2f" }}</td>
-                                <td>
-                                    {% if fila.evaluacion %}
-                                        {{ fila.evaluacion.nota_obtenida|stringformat:".2f" }}
-                                    {% else %}
-                                        &mdash;
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4">No hay objetivos detallados registrados para este plan.</td>
-                            </tr>
-                            {% endfor %}
-                            <tr>
-                                <td colspan="4">
-                                    <strong>Resumen:</strong> {{ row.puntos_evaluados|stringformat:".2f" }}/{{ row.puntos_acumulados|stringformat:".2f" }}
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            <p><a href="{% url 'evaluaciones:estudiante_plan_detalle' plan.pk %}">Ver detalle del plan</a></p>
+{% block title %}Detalle del Aula - NotaCore{% endblock %}
+
+{% block section_title %}Ficha Técnica del Aula{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-6 space-y-8">
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+        
+        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800/80">
+            <div class="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Aula Virtual Registrada</span>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight mt-0.5">
+                    {% if aula.catedra %}{{ aula.catedra }}{% else %}Cátedra General{% endif %}
+                </h2>
+            </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <p>No hay planes activos para este aula.</p>
-    {% endif %}
 
-    <p><a href="{% url 'evaluaciones:estudiante_planes' %}">Volver a planes</a></p>
-</body>
-</html>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs sm:text-sm">
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Año de Curso:</span>
+                <p class="font-semibold text-slate-200">{{ aula.año_curso }}° Año</p>
+            </div>
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Profesor a Cargo:</span>
+                <p class="font-semibold text-slate-200">{{ aula.profesor.usuario.get_full_name }}</p>
+            </div>
+            <div class="space-y-1">
+                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Distribución Temporal:</span>
+                <p class="font-semibold text-slate-200">{{ aula.get_lapsos_display }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div>
+                <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Evaluaciones</span>
+                <h3 class="text-xl font-bold text-white tracking-tight mt-0.5">Planes de Evaluación Activos</h3>
+            </div>
+        </div>
+
+        {% if planes %}
+            {% for plan in planes %}
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-lg">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-800/60">
+                    <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 uppercase tracking-wider">
+                            {{ plan.get_lapso_display }}
+                        </span>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-1.5">
+                            <span class="font-bold text-slate-500 text-[11px] uppercase">Objetivo General:</span> {{ plan.objetivo }}
+                        </p>
+                    </div>
+                    <div class="text-left sm:text-right text-xs">
+                        <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px] block">Puntuación Máxima</span>
+                        <span class="text-sm font-extrabold text-white">{{ plan.puntuacion_max }} PTS</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/20">
+                    <table class="w-full border-collapse text-left text-xs sm:text-sm text-slate-300">
+                        <thead class="bg-slate-950/40 border-b border-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-5 py-3">Objetivo</th>
+                                <th scope="col" class="px-5 py-3">Método de Evaluación</th>
+                                <th scope="col" class="px-5 py-3">Ponderación</th>
+                                <th scope="col" class="px-5 py-3 text-right">Calificación</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            {% for row in plan_rows %}
+                                {% if row.plan.pk == plan.pk %}
+                                    {% for fila in row.filas %}
+                                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                                        <td class="px-5 py-3 text-slate-200">
+                                            <span class="text-indigo-400 font-semibold">Obj {{ forloop.counter }}:</span> {{ fila.objetivo }}
+                                        </td>
+                                        <td class="px-5 py-3 text-slate-400">
+                                            {{ fila.metodo }}
+                                        </td>
+                                        <td class="px-5 py-3 text-slate-300 font-medium">
+                                            {{ fila.puntuacion|stringformat:".2f" }} pts
+                                        </td>
+                                        <td class="px-5 py-3 text-right">
+                                            {% if fila.evaluacion %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                                    {{ fila.evaluacion.nota_obtenida|stringformat:".2f" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-slate-600 font-medium">&mdash;</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-6 text-center text-slate-500 text-xs">
+                                            No hay detalles registrados para este plan.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <tr class="bg-slate-950/35 font-bold">
+                                        <td colspan="2" class="px-5 py-3.5 text-right uppercase text-slate-400 text-[10px] tracking-wider">
+                                            Resumen Académico:
+                                        </td>
+                                        <td colspan="2" class="px-5 py-3.5 text-right text-white">
+                                            <span class="text-emerald-400">{{ row.puntos_evaluados|stringformat:".2f" }}</span>
+                                            <span class="text-slate-500">/</span>
+                                            <span class="text-slate-200">{{ row.puntos_acumulados|stringformat:".2f" }} PTS</span>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <a href="{% url 'evaluaciones:estudiante_plan_detalle' plan.pk %}" 
+                       class="inline-flex items-center px-4 py-2 bg-slate-800 hover:bg-indigo-600 hover:text-white border border-slate-700 hover:border-indigo-500 text-slate-300 text-xs font-semibold rounded-xl transition duration-150">
+                        Ver detalle del plan
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs sm:text-sm">
+                No se han encontrado planes activos o planificados para esta aula virtual.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="flex justify-start pt-4 border-t border-slate-800/80">
+        <a href="{% url 'evaluaciones:estudiante_planes' %}" 
+           class="px-5 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+            Volver a planes
+        </a>
+    </div>
+
+</div>
+{% endblock %}

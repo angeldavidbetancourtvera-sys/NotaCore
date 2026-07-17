@@ -1,23 +1,92 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resumen de calificaciones</title>
-</head>
-<body>
-    <h1>Resumen de calificaciones</h1>
-    {% for grupo in resumen %}
-        <h2>{{ grupo.aula.año_curso }}° Año — {{ grupo.aula.catedra|default:'Sin cátedra' }} — Profesor {{ grupo.profesor }}</h2>
-        <p><strong>Profesor responsable:</strong> {{ grupo.profesor }}</p>
-        {% for item in grupo.items %}
-            <p><strong>{{ item.aula.catedra|default:'Sin cátedra' }} {{ item.lapso }}:</strong> {{ item.promedio|stringformat:'.2f' }} puntos</p>
+{% extends '_base.html' %}
+
+{% block title %}Resumen de Calificaciones - NotaCore{% endblock %}
+
+{% block section_title %}Historial Académico Consolidado{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Rendimiento Estudiantil</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">Resumen de Calificaciones</h2>
+            <p class="text-slate-400 text-sm mt-1">
+                Consulta los promedios calculados por materia y lapso académico del curso actual.
+            </p>
+        </div>
+        <a href="{% url 'evaluaciones:estudiante_dashboard' %}" 
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+            <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver al panel
+        </a>
+    </div>
+
+    <div class="space-y-6">
+        {% for grupo in resumen %}
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+            
+            <div class="border-b border-slate-800/80 pb-4 mb-5">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-xs font-bold text-slate-200 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg">
+                        {{ grupo.aula.año_curso }}° Año
+                    </span>
+                    <span class="text-xs font-semibold text-slate-300">
+                        Cátedra: <span class="text-white font-bold">{{ grupo.aula.catedra|default:'Sin cátedra' }}</span>
+                    </span>
+                </div>
+                <p class="text-slate-400 text-xs mt-2.5 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    Docente principal: <span class="text-slate-350 ml-1 font-medium">{{ grupo.profesor }}</span>
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider block">Calificaciones por Período</span>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {% for item in grupo.items %}
+                    <div class="bg-slate-950/45 border border-slate-800/60 p-4 rounded-xl flex items-center justify-between hover:border-slate-750 transition duration-150">
+                        <div class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Lapso</span>
+                            <h4 class="text-xs font-extrabold text-white uppercase tracking-tight">{{ item.lapso }}</h4>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black bg-slate-900 border border-slate-800 text-slate-100 min-w-[55px] justify-center">
+                                {{ item.promedio|stringformat:'.2f' }} <span class="text-[9px] text-slate-500 ml-1 font-semibold">PTS</span>
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-span-3 py-6 text-center text-slate-500 text-xs sm:text-sm">
+                        No se registran evaluaciones ingresadas para esta cátedra.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
         {% empty %}
-            <p>No hay calificaciones disponibles para esta aula.</p>
+        <div class="bg-slate-900/40 border border-slate-800 border-dashed rounded-2xl p-12 text-center">
+            <div class="max-w-md mx-auto space-y-4">
+                <div class="mx-auto w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <div class="space-y-1.5">
+                    <p class="font-bold text-white text-sm">Historial académico vacío</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Las calificaciones se mostrarán de forma consolidada en esta sección una vez que tus docentes publiquen los lapsos evaluativos correspondientes.
+                    </p>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-    {% empty %}
-        <p>No hay resumen disponible.</p>
-    {% endfor %}
-    <p><a href="{% url 'evaluaciones:estudiante_dashboard' %}">Volver al panel</a></p>
-</body>
-</html>
+    </div>
+
+</div>
+{% endblock %}

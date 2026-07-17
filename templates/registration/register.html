@@ -1,17 +1,101 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de usuario</title>
-</head>
-<body>
-    <h2>Registro</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Registrar</button>
-    </form>
-    <p><a href="{% url 'usuarios:login' %}">Volver al login</a></p>
-</body>
-</html>
+{% extends '_base.html' %}
+
+{% block title %}Registro de Usuario - NotaCore{% endblock %}
+
+{% block section_title %}Portal de Registro{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center py-10 px-4">
+    <div class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl shadow-slate-950/60 backdrop-blur-md relative overflow-hidden">
+        
+        <div class="space-y-2 text-left pb-4 border-b border-slate-800">
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Portal de Registro</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight">Crear Cuenta</h2>
+            <p class="text-sm text-slate-400 leading-relaxed">
+                Complete el formulario para dar de alta su usuario de forma segura en la plataforma.
+            </p>
+        </div>
+
+        <form method="post" class="mt-6 space-y-5">
+            {% csrf_token %}
+            
+            <div class="space-y-4 text-sm text-slate-300 registration-form-custom">
+                {{ form.as_p }}
+            </div>
+
+            <button type="submit" 
+                    class="w-full inline-flex items-center justify-center px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs rounded-xl uppercase tracking-wider transition duration-150 shadow-lg shadow-emerald-500/10">
+                Registrarse en la plataforma
+            </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-slate-800/60 flex flex-col gap-3 text-xs">
+            <a href="{% url 'usuarios:login' %}" class="font-semibold text-emerald-450 hover:text-emerald-350 transition duration-150 flex items-center">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                ¿Ya tienes una cuenta? Inicia sesión
+            </a>
+            <a href="{% url 'home' %}" class="text-slate-400 hover:text-slate-200 transition duration-150 flex items-center">
+                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .registration-form-custom p {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        margin-bottom: 1.25rem;
+    }
+    .registration-form-custom label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94a3b8; /* Slate-400 */
+        letter-spacing: 0.05em;
+    }
+    .registration-form-custom input, 
+    .registration-form-custom select, 
+    .registration-form-custom textarea {
+        width: 100%;
+        border: 1px solid #1e293b; /* Slate-800 */
+        border-radius: 0.75rem;
+        background-color: #020617; /* Slate-950 */
+        color: #f1f5f9; /* Slate-100 */
+        padding: 0.7rem 0.9rem;
+        font-size: 0.875rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .registration-form-custom input:focus, 
+    .registration-form-custom select:focus, 
+    .registration-form-custom textarea:focus {
+        border-color: #10b981; /* Emerald-500 */
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+    }
+    /* Textos de ayuda de Django (ej. requisitos de contraseña) */
+    .registration-form-custom .helptext {
+        font-size: 11px;
+        color: #64748b; /* Slate-500 */
+        margin-top: 0.35rem;
+        display: block;
+        line-height: 1.5;
+    }
+    /* Listas de errores de validación de Django */
+    .registration-form-custom .errorlist {
+        color: #f87171; /* Red-400 */
+        font-size: 11px;
+        margin-bottom: 0.5rem;
+        list-style-type: disc;
+        padding-left: 1.25rem;
+        line-height: 1.4;
+    }
+</style>
+{% endblock %}

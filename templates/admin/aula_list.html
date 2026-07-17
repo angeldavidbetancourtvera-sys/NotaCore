@@ -1,39 +1,80 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Aulas - NotaCore</title>
-</head>
-<body>
-    <h1>Gestión de aulas</h1>
-    <p><a href="{% url 'academico:aula_create' %}">Crear nueva aula</a> | <a href="{% url 'academico:admin_dashboard' %}">Regresar</a></p>
+{% extends '_base.html' %}
 
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Aula</th>
-                <th>Cátedra</th>
-                <th>Profesor</th>
-                <th>Lapsos</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for aula in aulas %}
-            <tr>
-                <td><a href="{% url 'academico:aula_detail' aula.pk %}">{{ aula.año_curso }}° Año</a></td>
-                <td>{% if aula.catedra %}{{ aula.catedra }}{% else %}—{% endif %}</td>
-                <td>{{ aula.profesor.usuario.get_full_name }}</td>
-                <td>{{ aula.get_lapsos_display }}</td>
-                <td>{% if aula.activo %}Activa{% else %}Inactiva{% endif %}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">No hay aulas registradas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% block title %}Gestión de Aulas - NotaCore{% endblock %}
+
+{% block section_title %}Administración Académica / Gestión de Aulas{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <p class="text-slate-400 text-xs sm:text-sm">
+            Visualiza, edita y administra los parámetros de configuración de las aulas activas del sistema.
+        </p>
+        <div class="flex flex-wrap gap-2.5">
+            <a href="{% url 'academico:admin_dashboard' %}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Volver al dashboard
+            </a>
+            <a href="{% url 'academico:aula_create' %}" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition duration-150 shadow-md shadow-indigo-600/10">
+                + Crear nueva aula
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs sm:text-sm text-slate-300">
+                <thead class="bg-slate-950/40 border-b border-slate-800 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">Aula</th>
+                        <th scope="col" class="px-6 py-4">Cátedra</th>
+                        <th scope="col" class="px-6 py-4">Profesor</th>
+                        <th scope="col" class="px-6 py-4">Lapsos</th>
+                        <th scope="col" class="px-6 py-4">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for aula in aulas %}
+                    <tr class="hover:bg-slate-800/10 transition duration-150">
+                        <td class="px-6 py-4">
+                            <a href="{% url 'academico:aula_detail' aula.pk %}" class="font-bold text-indigo-400 hover:text-indigo-300 transition hover:underline">
+                                {{ aula.año_curso }}° Año
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 text-white font-semibold">
+                            {% if aula.catedra %}{{ aula.catedra }}{% else %}<span class="text-slate-600">Sin registrar</span>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-slate-300">
+                            {{ aula.profesor.usuario.get_full_name }}
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-400">
+                            {{ aula.get_lapsos_display }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if aula.activo %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider">
+                                Activa
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-wider">
+                                Inactiva
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-500 text-xs">
+                            No se han encontrado aulas registradas en la base de datos de la institución.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

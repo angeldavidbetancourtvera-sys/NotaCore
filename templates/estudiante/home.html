@@ -1,42 +1,90 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel estudiante</title>
-</head>
-<body>
-    <main class="page-shell">
-        <section class="page-header">
-            <p class="page-caption">Panel del estudiante</p>
-            <h1 class="page-title">Bienvenido estudiante</h1>
-            <p class="page-subtitle">Accede a tus aulas, planes y calificaciones.</p>
-        </section>
+{% extends '_base.html' %}
 
-        <section class="section-panel">
-            <div class="form-footer">
-                <a class="button-secondary" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
-                <a class="button-secondary" href="{% url 'home' %}">Volver al inicio</a>
+{% block title %}Panel del Estudiante - NotaCore{% endblock %}
+
+{% block section_title %}Portal Académico Estudiantil{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Portal del Estudiante</span>
+            <h2 class="text-3xl font-extrabold text-white tracking-tight mt-1">Bienvenido de nuevo</h2>
+            <p class="text-slate-400 text-sm mt-1">Accede a tus asignaturas, planes de evaluación y al registro en tiempo real de tus calificaciones.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'home' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150">
+                Ir al inicio
+            </a>
+            <a href="{% url 'usuarios:logout' %}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl text-xs font-semibold transition duration-150">
+                Cerrar sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-slate-700 transition duration-200 flex flex-col justify-between min-h-[200px] shadow-sm">
+            <div class="space-y-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider">
+                    Clases
+                </span>
+                <h3 class="text-lg font-bold text-white tracking-tight mt-1">Mis Aulas</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">
+                    Consulta las aulas virtuales, asignaturas y secciones en las que te encuentras debidamente matriculado.
+                </p>
             </div>
 
-            <div class="card-grid">
-                <article class="card stat-card">
-                    <strong>Aulas</strong>
-                    <p>Consultar las aulas en las que estás matriculado.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_aulas' %}">Mis aulas</a>
-                </article>
-                <article class="card stat-card">
-                    <strong>Planes</strong>
-                    <p>Ver los planes de evaluación activos.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_planes' %}">Mis planes</a>
-                </article>
-                <article class="card stat-card">
-                    <strong>Calificaciones</strong>
-                    <p>Revisar tus calificaciones por aula y actividad.</p>
-                    <a class="button-secondary" href="{% url 'evaluaciones:estudiante_calificaciones' %}">Calificaciones</a>
-                </article>
+            <div class="pt-4">
+                <a href="{% url 'evaluaciones:estudiante_aulas' %}" 
+                   class="inline-flex items-center px-4 py-2.5 bg-slate-800 hover:bg-emerald-600 hover:text-white border border-slate-700 hover:border-emerald-500 text-slate-300 text-xs font-semibold rounded-xl transition duration-150 w-full justify-center">
+                    Acceder a mis aulas
+                </a>
             </div>
-        </section>
-    </main>
-</body>
-</html>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-slate-700 transition duration-200 flex flex-col justify-between min-h-[200px] shadow-sm">
+            <div class="space-y-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase tracking-wider">
+                    Planificación
+                </span>
+                <h3 class="text-lg font-bold text-white tracking-tight mt-1">Planes de Evaluación</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">
+                    Visualiza el cronograma de actividades, la distribución de ponderaciones y las evaluaciones del lapso.
+                </p>
+            </div>
+
+            <div class="pt-4">
+                <a href="{% url 'evaluaciones:estudiante_planes' %}" 
+                   class="inline-flex items-center px-4 py-2.5 bg-slate-800 hover:bg-blue-600 hover:text-white border border-slate-700 hover:border-blue-500 text-slate-300 text-xs font-semibold rounded-xl transition duration-150 w-full justify-center">
+                    Consultar planes
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-slate-700 transition duration-200 flex flex-col justify-between min-h-[200px] shadow-sm">
+            <div class="space-y-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 border border-purple-500/20 text-purple-400 uppercase tracking-wider">
+                    Rendimiento
+                </span>
+                <h3 class="text-lg font-bold text-white tracking-tight mt-1">Calificaciones</h3>
+                <p class="text-slate-400 text-xs leading-relaxed">
+                    Revisa el registro oficial de tus notas acumuladas, desglosadas por actividad evaluativa y por período.
+                </p>
+            </div>
+
+            <div class="pt-4">
+                <a href="{% url 'evaluaciones:estudiante_calificaciones' %}" 
+                   class="inline-flex items-center px-4 py-2.5 bg-slate-800 hover:bg-purple-600 hover:text-white border border-slate-700 hover:border-purple-500 text-slate-300 text-xs font-semibold rounded-xl transition duration-150 w-full justify-center">
+                    Ver calificaciones
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

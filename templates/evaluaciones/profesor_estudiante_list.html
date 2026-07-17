@@ -1,19 +1,76 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estudiantes del profesor - NotaCore</title>
-</head>
-<body>
-    <h1>Estudiantes asignados</h1>
-    <ul>
-        {% for estudiante in estudiantes %}
-        <li>{{ estudiante.usuario.get_full_name }} — {{ estudiante.usuario.email }}</li>
-        {% empty %}
-        <li>No tienes estudiantes asignados.</li>
-        {% endfor %}
-    </ul>
-    <p><a href="{% url 'evaluaciones:profesor_dashboard' %}">Volver al panel</a></p>
-</body>
-</html>
+{% extends '_base.html' %}
+
+{% block title %}Estudiantes Asignados - NotaCore{% endblock %}
+
+{% block section_title %}Base de Datos Estudiantil{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-6 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-800/80">
+        <div>
+            <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Directorio Estudiantil</span>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">Estudiantes Asignados</h2>
+            <p class="text-slate-400 text-sm mt-1">
+                Directorio consolidado de alumnos inscritos en tus distintas cátedras académicas.
+            </p>
+        </div>
+        <a href="{% url 'evaluaciones:profesor_dashboard' %}" 
+           class="inline-flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
+            <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Volver al panel
+        </a>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+        <div class="p-4 bg-slate-950/40 border-b border-slate-800/80 flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Registros Activos</span>
+            <span class="text-[10px] font-bold text-[#10B981] bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                {{ estudiantes|length }} alumnos detectados
+            </span>
+        </div>
+
+        <div class="divide-y divide-slate-800/60">
+            {% for estudiante in estudiantes %}
+            <div class="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-800/10 transition duration-150 group">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-bold text-slate-200 group-hover:text-emerald-400 transition duration-150">
+                        {{ estudiante.usuario.get_full_name }}
+                    </h3>
+                    <p class="text-xs text-slate-400 flex items-center">
+                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        {{ estudiante.usuario.email }}
+                    </p>
+                </div>
+
+                <div class="flex items-center">
+                    <a href="{% url 'evaluaciones:profesor_estudiante_detalle' estudiante.pk %}" 
+                       class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 group-hover:border-slate-650">
+                        Ver expediente
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-12 text-center space-y-3">
+                <div class="mx-auto w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm font-bold text-white">No hay estudiantes asignados</p>
+                    <p class="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
+                        Los estudiantes aparecerán enumerados en este directorio una vez que sean debidamente matriculados en sus aulas virtuales correspondientes.
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
