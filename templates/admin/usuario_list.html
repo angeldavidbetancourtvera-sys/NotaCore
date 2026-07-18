@@ -10,7 +10,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div>
             <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Directorio de Usuarios</span>
-            <h3 class="text-lg font-bold text-white tracking-tight mt-0.5">Gestión de Credenciales y Roles</h3>
+            <h3 class="text-lg font-bold text-indigo-400 tracking-tight mt-0.5">Gestión de Credenciales y Roles</h3>
         </div>
         <a href="{% url 'academico:admin_dashboard' %}" 
            class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
@@ -36,7 +36,7 @@
                         <td class="px-6 py-4 text-slate-400 font-medium">
                             {{ usuario.cedula }}
                         </td>
-                        <td class="px-6 py-4 font-semibold text-white">
+                        <td class="px-6 py-4 font-semibold text-black">
                             {{ usuario.get_full_name }}
                         </td>
                         <td class="px-6 py-4 text-slate-400">

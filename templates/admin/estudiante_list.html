@@ -11,7 +11,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Filtro de Datos</span>
-                <h3 class="text-lg font-bold text-white tracking-tight mt-0.5">Buscar Estudiante</h3>
+                <h3 class="text-lg font-bold text-indigo-400 tracking-tight mt-0.5">Buscar Estudiante</h3>
             </div>
             <a href="{% url 'academico:admin_dashboard' %}" 
                class="inline-flex items-center justify-center px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition duration-150 self-start sm:self-auto">
@@ -53,7 +53,7 @@
                 <tbody class="divide-y divide-slate-800/60">
                     {% for estudiante in estudiantes %}
                     <tr class="hover:bg-slate-800/10 transition duration-150">
-                        <td class="px-6 py-4 font-semibold text-white">
+                        <td class="px-6 py-4 font-semibold text-indigo-400">
                             <a href="{% url 'academico:estudiante_detail' estudiante.pk %}" class="hover:text-indigo-400 transition duration-150">
                                 {{ estudiante.usuario.get_full_name }}
                             </a>

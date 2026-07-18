@@ -10,12 +10,12 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/85">
         <div>
             <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Panel de Control</span>
-            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">
+            <h2 class="text-2xl font-extrabold text-indigo-400 tracking-tight mt-1">
                 {{ aula.año_curso }}° Año &mdash; 
                 <span class="text-slate-300 font-normal">{{ aula.catedra|default:'Sin Cátedra Registrada' }}</span>
             </h2>
             <p class="text-slate-400 text-sm mt-1">
-                Profesor Responsable: <span class="text-white font-semibold">{{ aula.profesor.usuario.get_full_name }}</span>
+                Profesor Responsable: <span class="text-black font-semibold">{{ aula.profesor.usuario.get_full_name }}</span>
             </p>
         </div>
         <div class="flex flex-wrap gap-3">
@@ -92,7 +92,7 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5 shadow-lg relative overflow-hidden group">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
                         <div class="flex items-center space-x-2.5">
-                            <span class="text-sm font-extrabold text-white">{{ plan.get_lapso_display }}</span>
+                            <span class="text-sm font-extrabold text-indigo-400">{{ plan.get_lapso_display }}</span>
                             <span class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider {% if plan.activo %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-slate-950 text-slate-500 border border-slate-800{% endif %}">
                                 {{ plan.activo|yesno:"Activo,Inactivo" }}
                             </span>
@@ -124,7 +124,7 @@
                                 <tr class="hover:bg-slate-800/10 transition duration-150">
                                     <td class="px-4 py-2.5 text-slate-200 font-medium">{{ objetivo }}</td>
                                     <td class="px-4 py-2.5">{{ metodo }}</td>
-                                    <td class="px-4 py-2.5 text-right text-white font-bold">{{ puntuacion }} pts</td>
+                                    <td class="px-4 py-2.5 text-right text-black font-bold">{{ puntuacion }} pts</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -175,7 +175,7 @@
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
         <div>
             <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Operaciones de Aula</span>
-            <h3 class="text-sm font-bold text-white mt-0.5">Acciones Rápidas del Aula</h3>
+            <h3 class="text-sm font-bold text-indigo-400 mt-0.5">Acciones Rápidas del Aula</h3>
         </div>
 
         <div class="flex flex-wrap gap-4">

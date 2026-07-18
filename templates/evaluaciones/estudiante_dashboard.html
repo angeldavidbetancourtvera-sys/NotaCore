@@ -10,7 +10,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-slate-800/80">
         <div>
             <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Portal de Estudiantes</span>
-            <h2 class="text-2xl font-extrabold text-white tracking-tight mt-1">Bienvenido, {{ estudiante.usuario.get_full_name }}</h2>
+            <h2 class="text-2xl font-extrabold text-indigo-400 tracking-tight mt-1">Bienvenido, {{ estudiante.usuario.get_full_name }}</h2>
             <p class="text-slate-400 text-sm mt-1">Consulta tus asignaturas asignadas, cronogramas de evaluación y calificaciones del lapso.</p>
         </div>
         <div class="flex flex-wrap gap-3">
@@ -39,7 +39,7 @@
                     </svg>
                 </span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Mis Planes de Evaluación</h3>
+            <h3 class="text-lg font-bold text-black mb-2">Mis Planes de Evaluación</h3>
             <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
                 Revisa los cronogramas oficiales de evaluación asignados para cada materia y lapso académico vigente.
             </p>
@@ -57,7 +57,7 @@
                     </svg>
                 </span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Registro de Calificaciones</h3>
+            <h3 class="text-lg font-bold text-black mb-2">Registro de Calificaciones</h3>
             <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
                 Accede a la libreta digital para verificar todas las notas de tus evaluaciones corregidas y ponderadas.
             </p>
@@ -69,7 +69,7 @@
         <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <div>
                 <span class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Matrícula Activa</span>
-                <h3 class="text-lg font-bold text-white tracking-tight mt-0.5">Mis Aulas Virtuales</h3>
+                <h3 class="text-lg font-bold text-indigo-400 tracking-tight mt-0.5">Mis Aulas Virtuales</h3>
             </div>
             <a href="{% url 'evaluaciones:estudiante_aulas' %}" class="text-xs font-semibold text-slate-400 hover:text-indigo-400 transition duration-150 flex items-center">
                 Ver todas las aulas
@@ -97,7 +97,7 @@
                                     {{ aula.año_curso }}° Año
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-white font-medium">
+                            <td class="px-6 py-4 text-black font-medium">
                                 {% if aula.catedra %}
                                     {{ aula.catedra }}
                                 {% else %}
